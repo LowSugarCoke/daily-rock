@@ -1,3 +1,6 @@
+// Verified Solution for GET /api/greet
+// Full working version of backend/src/lib.rs for reference.
+
 use axum::{extract::Query, response::IntoResponse, routing::get, Json, Router};
 use serde::{Deserialize, Serialize};
 use tower_service::Service;
@@ -22,17 +25,11 @@ pub struct GreetResponse {
     pub message: String,
 }
 
+// Correct working handler implementation:
 async fn greet(Query(query): Query<GreetQuery>) -> impl IntoResponse {
-    // TODO: USER PRACTICE - Implement this handler to pass the tests!
-    // 💡 Hints:
-    // 1. Check if `query.name` is Some(val) or None.
-    // 2. Format the greeting message: "Hello, {name}!" or "Hello, Guest!".
-    // 3. Construct a GreetResponse structural instance.
-    // 4. Wrap it in Axum's `Json(...)` helper and return it.
-    
-    // Stub implementation to allow compilation (this will fail the assertions):
+    let name = query.name.unwrap_or_else(|| "Guest".to_string());
     Json(GreetResponse {
-        message: "STUB".to_string(),
+        message: format!("Hello, {}!", name),
     })
 }
 
