@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepare": "cd .. && husky frontend/.husky"
   },
   "dependencies": {
@@ -15,14 +17,19 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "husky": "^9.1.7",
+    "jsdom": "^30.0.1",
     "lint-staged": "^17.3.0",
     "prettier": "^3.9.6",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
