@@ -34,6 +34,15 @@ Create a GitHub issue.
 
 Run `gh issue view <number> --comments`.
 
+## Automated sync on PR merge
+
+When a PR whose branch follows the `type/<issue-number>-slug` convention is merged, `.github/workflows/ticket-sync.yml` automatically:
+
+1. Posts a comment on the linked issue — reusing the AI review pipeline's existing summary comment from the PR if one was posted, or a generic "closed via #PR" note if not.
+2. Closes the issue.
+
+This is skipped entirely for issues carrying a `wayfinder:*` label (child tickets) — those still go through the manual Resolve flow below, since closing a child also requires updating its map's Decisions-so-far. If the branch name doesn't resolve to an issue number, the workflow leaves a warning comment on the PR instead and does nothing further. See `docs/adr/0004-ai-ticket-sync-on-merge.md` for the reasoning behind these boundaries.
+
 ## Wayfinding operations
 
 Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.

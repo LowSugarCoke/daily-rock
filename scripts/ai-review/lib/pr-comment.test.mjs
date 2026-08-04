@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { upsertComment } from './pr-comment.mjs';
+import { upsertComment, findCommentByMarker, createComment } from './pr-comment.mjs';
 
 const MARKER = '<!-- ai-review-pipeline -->';
 
@@ -214,5 +214,81 @@ describe('upsertComment', () => {
     expect(fetchMock.mock.calls[1][0]).toBe(
       'https://api.github.com/repos/o/r/issues/5/comments?page=3'
     );
+  });
+});
+
+describe('findCommentByMarker', () => {
+  it('returns the bot comment carrying the marker', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      jsonResponse([
+        { id: 1, user: { login: 'someone' }, body: 'unrelated' },
+        {
+          id: 2,
+          user: { login: 'github-actions[bot]' },
+          body: `${MARKER}\ncontent`,
+        },
+      ])
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await findCommentByMarker({
+      repo: 'o/r',
+      issueNumber: 5,
+      token: 't',
+      marker: MARKER,
+    });
+
+    expect(result).toEqual({
+      id: 2,
+      user: { login: 'github-actions[bot]' },
+      body: `${MARKER}\ncontent`,
+    });
+  });
+
+  it('returns undefined when no comment carries the marker', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse([]));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await findCommentByMarker({
+      repo: 'o/r',
+      issueNumber: 5,
+      token: 't',
+      marker: MARKER,
+    });
+
+    expect(result).toBeUndefined();
+  });
+});
+
+describe('createComment', () => {
+  it('POSTs the given body to the issue comments endpoint', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ id: 42, body: 'hello' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await createComment({
+      repo: 'o/r',
+      issueNumber: 5,
+      token: 't',
+      body: 'hello',
+    });
+
+    const [url, opts] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://api.github.com/repos/o/r/issues/5/comments');
+    expect(opts.method).toBe('POST');
+    expect(JSON.parse(opts.body)).toEqual({ body: 'hello' });
+    expect(result).toEqual({ id: 42, body: 'hello' });
+  });
+
+  it('throws a descriptive error on a non-2xx status', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ message: 'nope' }, { status: 403 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      createComment({ repo: 'o/r', issueNumber: 5, token: 't', body: 'hi' })
+    ).rejects.toThrow(/creating comment \(403\)/i);
   });
 });

@@ -24,6 +24,37 @@ async function ghGet(path, token) {
   return res.json();
 }
 
+async function ghPatch(path, token, payload) {
+  const res = await fetch(
+    `https://api.github.com/repos/${TRACKER_OWNER}/${TRACKER_REPO}${path}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!res.ok) {
+    throw new Error(
+      `GitHub API error updating ${path} (${res.status}): ${await res.text()}`
+    );
+  }
+  return res.json();
+}
+
+/** Fetches the label names on an issue — used to detect wayfinder child tickets (`wayfinder:*`), which ticket-sync skips. */
+export async function fetchIssueLabels(number, token) {
+  const issue = await ghGet(`/issues/${number}`, token);
+  return (issue.labels ?? []).map((l) => (typeof l === 'string' ? l : l.name));
+}
+
+export async function closeIssue(number, token) {
+  return ghPatch(`/issues/${number}`, token, { state: 'closed' });
+}
+
 /**
  * Parses the ticket number out of the PR's head branch name and fetches the
  * corresponding issue + comments from the (private) X-Talent-Tracker repo.

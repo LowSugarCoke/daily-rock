@@ -30,10 +30,46 @@ async function* listAllComments({ repo, issueNumber, token }) {
 }
 
 /**
+ * Finds the bot's own comment carrying `marker` — paginates through comment
+ * pages (stopping as soon as it's found) so a long thread can't hide it on
+ * page 2+ without requiring every page to be fetched. Returns undefined if
+ * no such comment exists.
+ */
+export async function findCommentByMarker({ repo, issueNumber, token, marker }) {
+  for await (const comment of listAllComments({ repo, issueNumber, token })) {
+    if (comment.user?.login === BOT_LOGIN && comment.body?.includes(marker)) {
+      return comment;
+    }
+  }
+  return undefined;
+}
+
+export async function createComment({ repo, issueNumber, token, body }) {
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}/issues/${issueNumber}/comments`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ body }),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      `GitHub API error creating comment (${res.status}): ${await res.text()}`
+    );
+  }
+
+  return res.json();
+}
+
+/**
  * Creates the PR comment carrying `marker`, or updates it in place if one
- * already exists — paginates through comment pages (stopping as soon as the
- * bot's own prior comment is found) so a long PR thread can't hide it on
- * page 2+ without requiring every page to be fetched.
+ * already exists.
  */
 export async function upsertComment({
   repo,
@@ -42,33 +78,28 @@ export async function upsertComment({
   marker,
   body,
 }) {
-  let existing;
-  for await (const comment of listAllComments({ repo, issueNumber, token })) {
-    if (comment.user?.login === BOT_LOGIN && comment.body?.includes(marker)) {
-      existing = comment;
-      break;
-    }
+  const existing = await findCommentByMarker({ repo, issueNumber, token, marker });
+
+  if (!existing) {
+    return createComment({ repo, issueNumber, token, body });
   }
 
-  const url = existing
-    ? `https://api.github.com/repos/${repo}/issues/comments/${existing.id}`
-    : `https://api.github.com/repos/${repo}/issues/${issueNumber}/comments`;
-  const method = existing ? 'PATCH' : 'POST';
-
-  const res = await fetch(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github+json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ body }),
-  });
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}/issues/comments/${existing.id}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ body }),
+    }
+  );
 
   if (!res.ok) {
-    const action = existing ? 'updating' : 'creating';
     throw new Error(
-      `GitHub API error ${action} comment (${res.status}): ${await res.text()}`
+      `GitHub API error updating comment (${res.status}): ${await res.text()}`
     );
   }
 
