@@ -1,0 +1,24 @@
+name: Direct Push Warning
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  warn:
+    runs-on: ubuntu-latest
+    name: 'Warn on direct push to main'
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Warn on commits that did not come from a merged PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMITS_JSON: ${{ toJSON(github.event.commits) }}
+        run: node scripts/branch-policy/warn-direct-push.mjs

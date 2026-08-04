@@ -11,6 +11,7 @@ Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all op
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
 - **Branch naming convention**: Branch names should follow the pattern `type/<issue-number>-slug` (e.g., `feat/14-ci-pipeline`, `fix/13-multi-agent-review`), where `type` is one of `feat`, `fix`, `chore`, `refactor`, `perf`, `docs`, or `test`. This pattern is used by the AI PR review system to resolve the PR to its originating GitHub issue.
+- **All changes go through a PR** — never commit or push directly to `main`. Work on a branch following the naming convention above, open a PR, and merge it. This is required to get AI review (`ai-review.yml`) and automated ticket close/comment (`ticket-sync.yml`), both of which only trigger on `pull_request` events. **Not technically enforced**: this repo is private on GitHub's free plan, which doesn't support branch protection / rulesets (requires GitHub Pro), so there is nothing stopping a direct push to `main` — this is a discipline convention, not a server-side gate.
 
 Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
 
