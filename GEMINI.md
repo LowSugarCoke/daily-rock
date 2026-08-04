@@ -15,6 +15,11 @@ We follow **Test-Driven Development (TDD)** across the entire stack.
     4.  In the active working file (e.g., `backend/src/lib.rs`), the AI agent **replaces the implementation with a stub** (returning a dummy value to allow compilation) and provides step-by-step hints.
     5.  This guarantees that the challenge is 100% functional and solvable, while keeping the user's practice environment clean of spoilers.
 *   **Goal**: The user practices Rust with the peace of mind that the tests are verified and a correct "cheat sheet" solution exists separately if they get stuck.
+*   **User context**: The learner's daily language is C++, new to Rust.
+*   **Hint calibration** (learned from the `/api/greet` challenge — the original hints only described behavior and the learner got stuck on unfamiliar syntax):
+    *   Name the actual Rust method/syntax to use, not just the abstract behavior (e.g. say `.unwrap_or_else(|| ...)`, don't just say "handle the None case").
+    *   Gloss any syntax with no direct C++ equivalent in one line — closures-as-arguments, `?`, `match`/`if let`, trait bounds. A C++ analogy helps when one exists (e.g. `Option::unwrap_or_else` ~ `std::optional::value_or`; `|| expr` ~ `[]() { return expr; }`).
+    *   Don't hint something the stub's code shape already gives away (e.g. don't hint "wrap it in `Json(...)`" if the stub already shows `Json(GreetResponse { ... })` verbatim) — only hint what's genuinely new or undiscoverable.
 
 ### 2. Frontend (Full Implementation)
 *   **Role**: Full Developer (Author of both Tests and Implementation).

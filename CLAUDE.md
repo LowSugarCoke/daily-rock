@@ -1,3 +1,5 @@
+@GEMINI.md
+
 ## Agent skills
 
 ### Issue tracker
