@@ -10,6 +10,7 @@ Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all op
 - **Comment on an issue**: `gh issue comment <number> --body "..."`
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
+- **Branch naming convention**: Branch names should follow the pattern `type/<issue-number>-slug` (e.g., `feat/14-ci-pipeline`, `fix/13-multi-agent-review`), where `type` is one of `feat`, `fix`, `chore`, `refactor`, `perf`, `docs`, or `test`. This pattern is used by the AI PR review system to resolve the PR to its originating GitHub issue.
 
 Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
 
