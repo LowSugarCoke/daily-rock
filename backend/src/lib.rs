@@ -24,19 +24,9 @@ pub struct GreetResponse {
 
 #[allow(unused_variables)]
 async fn greet(Query(query): Query<GreetQuery>) -> impl IntoResponse {
-    // TODO: USER PRACTICE - Implement this handler to pass the tests!
-    // 💡 Hints:
-    // 1. `query.name` is an `Option<String>`. Use `.unwrap_or_else(|| ...)` to get the
-    //    value, or fall back to a default when it's `None` (similar to C++'s
-    //    `std::optional::value_or`, but the default is computed lazily via a closure).
-    //    `|| "Guest".to_string()` is a Rust closure — like C++'s `[]() { return ...; }` —
-    //    where `||` is the (empty) parameter list, and since the body is a single
-    //    expression, no `{}` or `return` is needed.
-    // 2. Format the message with `format!("Hello, {}!", name)`.
-
-    // Stub implementation to allow compilation (this will fail the assertions):
+    let name = query.name.unwrap_or_else(|| "Guest".to_string());
     Json(GreetResponse {
-        message: "STUB".to_string(),
+        message: format!("Hello, {}!", name),
     })
 }
 
@@ -99,17 +89,7 @@ impl Default for InMemorySongStore {
 
 impl SongStore for InMemorySongStore {
     fn get_current_song(&self) -> Option<Song> {
-        // TODO: USER PRACTICE - Implement this method to return the first chronological song!
-        // 💡 Hints:
-        // 1. `self.songs` is a `Vec<Song>`. In Rust, you can get the first element of a vector
-        //    as an `Option<&T>` using the `.first()` method (similar to C++'s `std::vector::front()`,
-        //    but safe because it returns an `Option` instead of triggering undefined behavior if empty).
-        // 2. Since `Option<&Song>` is a reference, and this method returns an owned `Option<Song>`,
-        //    you need to clone the song. You can use `.cloned()` on `Option<&T>` where `T` implements
-        //    `Clone` to convert `Option<&T>` to `Option<T>` (equivalent to mapping with a lambda `[](const Song& s) { return s; }`).
-
-        // Stub implementation to allow compilation (this will fail the assertions):
-        None
+        self.songs.first().cloned()
     }
 }
 
