@@ -1,4 +1,9 @@
-use axum::{extract::Query, response::IntoResponse, Json};
+use axum::{
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
@@ -26,4 +31,11 @@ pub async fn greet(Query(query): Query<GreetQuery>) -> impl IntoResponse {
     Json(GreetResponse {
         message: format!("Hello, {}!", name),
     })
+}
+
+pub async fn get_current_song(State(state): State<crate::AppState>) -> impl IntoResponse {
+    match state.song_store.get_daily_selection() {
+        Some(song) => Json(song).into_response(),
+        None => (StatusCode::NOT_FOUND, Json("No song found")).into_response(),
+    }
 }

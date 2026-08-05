@@ -1,9 +1,10 @@
-// Verified Solution for Songs and SongStore in-memory implementation
-// Full working version of backend/src/lib.rs for reference.
+// Verified Solution for Songs, SongStore, and GET /api/songs/current in-memory implementation
+// Full working version of backend for reference.
 
-use axum::{extract::Query, response::IntoResponse, routing::get, Json, Router};
+use axum::{extract::{Query, State}, response::IntoResponse, http::StatusCode, routing::get, Json, Router};
 use serde::{Deserialize, Serialize};
 use tower_service::Service;
+use std::sync::Arc;
 use worker::*;
 
 #[derive(Serialize)]
@@ -96,10 +97,30 @@ impl SongStore for InMemorySongStore {
     }
 }
 
+#[derive(Clone)]
+pub struct AppState {
+    pub song_store: Arc<dyn SongStore + Send + Sync>,
+}
+
+pub async fn get_current_song(
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    match state.song_store.get_daily_selection() {
+        Some(song) => Json(song).into_response(),
+        None => (StatusCode::NOT_FOUND, Json("No song found")).into_response(),
+    }
+}
+
 pub fn app() -> Router {
+    let state = AppState {
+        song_store: Arc::new(InMemorySongStore::new()),
+    };
+
     Router::new()
         .route("/api/health", get(health_check))
         .route("/api/greet", get(greet))
+        .route("/api/songs/current", get(get_current_song))
+        .with_state(state)
 }
 
 #[event(fetch)]
@@ -175,5 +196,22 @@ mod tests {
         assert_eq!(song.era, "1950s");
         assert_eq!(song.genre_tags, vec!["Rock 'n' Roll".to_string()]);
         assert_eq!(song.youtube_id, "T38v3-SSGcM");
+    }
+
+    #[tokio::test]
+    async fn test_get_current_song() {
+        let app = app();
+        let server = TestServer::new(app);
+
+        let response = server.get("/api/songs/current").await;
+        response.assert_status_ok();
+
+        let body: Song = response.json();
+        assert_eq!(body.id, "1");
+        assert_eq!(body.title, "Johnny B. Goode");
+        assert_eq!(body.artist, "Chuck Berry");
+        assert_eq!(body.era, "1950s");
+        assert_eq!(body.genre_tags, vec!["Rock 'n' Roll".to_string()]);
+        assert_eq!(body.youtube_id, "T38v3-SSGcM");
     }
 }

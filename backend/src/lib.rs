@@ -1,14 +1,27 @@
 use axum::{routing::get, Router};
+use std::sync::Arc;
 use tower_service::Service;
 use worker::*;
 
 pub mod handlers;
 pub mod store;
 
+#[derive(Clone)]
+#[allow(dead_code)]
+pub struct AppState {
+    pub song_store: Arc<dyn store::SongStore + Send + Sync>,
+}
+
 pub fn app() -> Router {
+    let state = AppState {
+        song_store: Arc::new(store::InMemorySongStore::new()),
+    };
+
     Router::new()
         .route("/api/health", get(handlers::health_check))
         .route("/api/greet", get(handlers::greet))
+        .route("/api/songs/current", get(handlers::get_current_song))
+        .with_state(state)
 }
 
 #[event(fetch)]
@@ -71,5 +84,22 @@ mod tests {
 
         let body: GreetResponse = response.json();
         assert_eq!(body.message, "Hello, Guest!");
+    }
+
+    #[tokio::test]
+    async fn test_get_current_song() {
+        let app = app();
+        let server = TestServer::new(app);
+
+        let response = server.get("/api/songs/current").await;
+        response.assert_status_ok();
+
+        let body: store::Song = response.json();
+        assert_eq!(body.id, "1");
+        assert_eq!(body.title, "Johnny B. Goode");
+        assert_eq!(body.artist, "Chuck Berry");
+        assert_eq!(body.era, "1950s");
+        assert_eq!(body.genre_tags, vec!["Rock 'n' Roll".to_string()]);
+        assert_eq!(body.youtube_id, "T38v3-SSGcM");
     }
 }
