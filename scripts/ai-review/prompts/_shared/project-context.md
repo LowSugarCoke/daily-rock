@@ -8,7 +8,9 @@
 - **平台與框架**：運行於 Cloudflare Workers (使用 `worker` crate)，並結合 `axum` 進行路由與請求分發。
 - **測試框架**：採用 `tokio::test` 與 `axum-test` (`TestServer`) 進行端到端與單元測試。
 - **程式碼規範**：一律通過 `cargo fmt` 格式化，且 `cargo clippy -- -D warnings` 不可有任何編譯警告或 clippy 錯誤。
-- **挑戰練習模式**：本專案設有學習者練習機制。對於學習練習任務（如 `greet`），驗證通過的完整實作應移至 `backend/solutions/[feature_name].rs`，而主工作區 `backend/src/lib.rs` 則保留 stub 與引導提示（Hint Calibration），且 stub 需加上 `#[allow(unused_variables)]` 確保 clippy 通過。
+- **挑戰練習模式與開發規則**：
+  - **僅在 AI 代理人「新增或設計練習挑戰」時**，才需將解答置於 `backend/solutions/[feature_name].rs` 並在主工作區 `backend/src/lib.rs` 保留 stub 與引導提示。
+  - **在日常開發、專案擴充、或使用者（學習者）提交 PR 進行解答與實作時**，主工作區 `backend/src/lib.rs` 本來就必須實作完整、功能健全的程式碼（例如實作 `greet`、`InMemorySongStore` 或其餘業務元件）。**審查 PR 時，若看見主工作區實作了完整解答或新增了實際業務元件，此為正確且預期的行為，絕對不要回報為架構或慣例違規。**
 
 ### 3. 前端慣例 (TypeScript / Next.js)
 - **框架版本**：Next.js (App Router, 目前為 v16.3.0) 搭配 React 19 與 TypeScript。使用 `npm` 套件管理。
