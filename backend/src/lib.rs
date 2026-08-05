@@ -1,14 +1,33 @@
 use axum::{routing::get, Router};
+use std::sync::Arc;
 use tower_service::Service;
 use worker::*;
 
 pub mod handlers;
 pub mod store;
 
-pub fn app() -> Router {
+#[derive(Clone)]
+#[allow(dead_code)]
+pub struct AppState {
+    pub song_store: Arc<dyn store::SongStore + Send + Sync>,
+}
+
+pub fn app_with_store(store: Arc<dyn store::SongStore + Send + Sync>) -> Router {
+    let state = AppState { song_store: store };
+
     Router::new()
         .route("/api/health", get(handlers::health_check))
         .route("/api/greet", get(handlers::greet))
+        .route(
+            "/api/daily_selection",
+            get(handlers::get_current_daily_selection),
+        )
+        .with_state(state)
+}
+
+pub fn app() -> Router {
+    let store = Arc::new(store::InMemorySongStore::new());
+    app_with_store(store)
 }
 
 #[event(fetch)]
@@ -71,5 +90,35 @@ mod tests {
 
         let body: GreetResponse = response.json();
         assert_eq!(body.message, "Hello, Guest!");
+    }
+
+    #[tokio::test]
+    async fn test_get_current_daily_selection() {
+        let app = app();
+        let server = TestServer::new(app);
+
+        let response = server.get("/api/daily_selection").await;
+        response.assert_status_ok();
+
+        let body: store::Song = response.json();
+        assert_eq!(body.id, "1");
+        assert_eq!(body.title, "Johnny B. Goode");
+        assert_eq!(body.artist, "Chuck Berry");
+        assert_eq!(body.era, "1950s");
+        assert_eq!(body.genre_tags, vec!["Rock 'n' Roll".to_string()]);
+        assert_eq!(body.youtube_id, "T38v3-SSGcM");
+    }
+
+    #[tokio::test]
+    async fn test_get_current_daily_selection_not_found() {
+        let empty_store = Arc::new(store::InMemorySongStore { songs: vec![] });
+        let app = app_with_store(empty_store);
+        let server = TestServer::new(app);
+
+        let response = server.get("/api/daily_selection").await;
+        response.assert_status(axum::http::StatusCode::NOT_FOUND);
+
+        let body: String = response.json();
+        assert_eq!(body, "No song found");
     }
 }
