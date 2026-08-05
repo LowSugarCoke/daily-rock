@@ -44,7 +44,7 @@ pub struct Song {
 }
 
 pub trait SongStore {
-    fn get_current_song(&self) -> Option<Song>;
+    fn get_daily_selection(&self) -> Option<Song>;
 }
 
 pub struct InMemorySongStore {
@@ -91,7 +91,7 @@ impl Default for InMemorySongStore {
 }
 
 impl SongStore for InMemorySongStore {
-    fn get_current_song(&self) -> Option<Song> {
+    fn get_daily_selection(&self) -> Option<Song> {
         self.songs.first().cloned()
     }
 }
@@ -166,7 +166,7 @@ mod tests {
     #[tokio::test]
     async fn test_in_memory_song_store_returns_first_song() {
         let store = InMemorySongStore::new();
-        let current = store.get_current_song();
+        let current = store.get_daily_selection();
         assert!(current.is_some());
         let song = current.unwrap();
         assert_eq!(song.id, "1");
