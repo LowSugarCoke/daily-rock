@@ -13,14 +13,15 @@ pub struct AppState {
 }
 
 pub fn app_with_store(store: Arc<dyn store::SongStore + Send + Sync>) -> Router {
-    let state = AppState {
-        song_store: store,
-    };
+    let state = AppState { song_store: store };
 
     Router::new()
         .route("/api/health", get(handlers::health_check))
         .route("/api/greet", get(handlers::greet))
-        .route("/api/daily_selection", get(handlers::get_current_daily_selection))
+        .route(
+            "/api/daily_selection",
+            get(handlers::get_current_daily_selection),
+        )
         .with_state(state)
 }
 
