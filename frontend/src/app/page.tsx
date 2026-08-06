@@ -3,26 +3,39 @@
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 
-interface HealthStatus {
-  status: string;
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  era: string;
+  genre_tags: string[];
+  youtube_id: string;
 }
 
 export default function Home() {
-  const [health, setHealth] = useState<HealthStatus | null>(null);
+  const [song, setSong] = useState<Song | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [noSong, setNoSong] = useState<boolean>(false);
 
   useEffect(() => {
-    fetch("/api/health")
+    fetch("/api/daily_selection")
       .then((res) => {
+        if (res.status === 404) {
+          setNoSong(true);
+          setLoading(false);
+          return null;
+        }
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         return res.json();
       })
-      .then((data: HealthStatus) => {
-        setHealth(data);
-        setLoading(false);
+      .then((data: Song | null) => {
+        if (data) {
+          setSong(data);
+          setLoading(false);
+        }
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : String(err));
@@ -43,31 +56,68 @@ export default function Home() {
             history, ratings, and classic rock evolution.
           </p>
 
-          <div className={styles.healthSection}>
-            <h2 className={styles.sectionTitle}>System Status</h2>
+          <div className={styles.selectionSection}>
             {loading && (
               <div className={styles.statusBox}>
                 <span className={styles.spinner}></span>
-                Checking backend connection...
+                {"Loading today's selection..."}
               </div>
             )}
+
             {error && (
               <div className={`${styles.statusBox} ${styles.error}`}>
                 <span
                   className={styles.statusDot}
-                  style={{ color: "#ff4d4f" }}
+                  style={{ backgroundColor: "#ff4d4f" }}
                 ></span>
-                Backend Offline: {error}
+                <div className={styles.errorContent}>
+                  <h3 className={styles.errorTitle}>
+                    {"Failed to load today's selection"}
+                  </h3>
+                  <p className={styles.errorMessage}>{error}</p>
+                </div>
               </div>
             )}
-            {health && (
-              <div className={`${styles.statusBox} ${styles.success}`}>
+
+            {noSong && (
+              <div className={`${styles.statusBox} ${styles.warning}`}>
                 <span
                   className={styles.statusDot}
-                  style={{ color: "#52c41a" }}
+                  style={{ backgroundColor: "#faad14" }}
                 ></span>
-                Backend Online:{" "}
-                <code className={styles.code}>{JSON.stringify(health)}</code>
+                <div className={styles.warningContent}>
+                  <h3 className={styles.warningTitle}>
+                    No daily selection available
+                  </h3>
+                  <p className={styles.warningMessage}>
+                    There are no songs loaded in the database yet.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {song && (
+              <div className={styles.songCard}>
+                <div className={styles.cardHeader}>
+                  <span className={styles.cardBadge}>
+                    {"Today's Selection"}
+                  </span>
+                  <span className={styles.eraTag}>{song.era}</span>
+                </div>
+                <h2 className={styles.songTitle}>{song.title}</h2>
+                <p className={styles.songArtist}>{song.artist}</p>
+                <div className={styles.genreTags}>
+                  {song.genre_tags.map((tag) => (
+                    <span key={tag} className={styles.genreTag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className={styles.mediaPlaceholder}>
+                  <span className={styles.playIcon}>▶</span>
+                  <span>YouTube Player Placeholder (Issue #7)</span>
+                </div>
               </div>
             )}
           </div>
@@ -84,7 +134,7 @@ export default function Home() {
           </a>
           <a
             className={styles.secondary}
-            href="/api/health"
+            href="/api/daily_selection"
             target="_blank"
             rel="noopener noreferrer"
           >
