@@ -1,4 +1,7 @@
 use serde::{Deserialize, Serialize};
+use std::future::Future;
+use std::pin::Pin;
+use worker::send::SendFuture;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Song {
@@ -11,7 +14,7 @@ pub struct Song {
 }
 
 pub trait SongStore {
-    fn get_daily_selection(&self) -> Option<Song>;
+    fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>>;
 }
 
 pub struct InMemorySongStore {
@@ -58,8 +61,54 @@ impl Default for InMemorySongStore {
 }
 
 impl SongStore for InMemorySongStore {
-    fn get_daily_selection(&self) -> Option<Song> {
-        self.songs.first().cloned()
+    fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move { self.songs.first().cloned() }))
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct D1Song {
+    pub id: String,
+    pub title: String,
+    pub artist: String,
+    pub era: String,
+    pub genre_tags: String, // Stored as a JSON-serialized array in SQLite/D1
+    pub youtube_id: String,
+}
+
+pub struct D1SongStore {
+    pub db: worker::d1::D1Database,
+}
+
+impl D1SongStore {
+    pub fn new(db: worker::d1::D1Database) -> Self {
+        Self { db }
+    }
+
+    // A helper method that performs the D1 database query and deserializes the fields.
+    // This separation avoids having the complex Pin/Box wrapper logic directly mixed in.
+    async fn fetch_daily_selection(&self) -> Option<Song> {
+        let statement = self.db.prepare(
+            "SELECT id, title, artist, era, genre_tags, youtube_id FROM songs ORDER BY id ASC LIMIT 1"
+        );
+        let d1_song = statement.first::<D1Song>(None).await.ok()??;
+        let genre_tags: Vec<String> = serde_json::from_str(&d1_song.genre_tags).unwrap_or_default();
+        Some(Song {
+            id: d1_song.id,
+            title: d1_song.title,
+            artist: d1_song.artist,
+            era: d1_song.era,
+            genre_tags,
+            youtube_id: d1_song.youtube_id,
+        })
+    }
+}
+
+impl SongStore for D1SongStore {
+    fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            self.fetch_daily_selection().await
+        }))
     }
 }
 
@@ -67,10 +116,10 @@ impl SongStore for InMemorySongStore {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_in_memory_song_store_returns_first_song() {
+    #[tokio::test]
+    async fn test_in_memory_song_store_returns_first_song() {
         let store = InMemorySongStore::new();
-        let current = store.get_daily_selection();
+        let current = store.get_daily_selection().await;
         assert!(current.is_some());
         let song = current.unwrap();
         assert_eq!(song.id, "1");

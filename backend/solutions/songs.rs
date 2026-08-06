@@ -1,10 +1,20 @@
-// Verified Solution for Songs, SongStore, and GET /api/songs/current in-memory implementation
+// Verified Solution for Songs, SongStore, and GET /api/songs/current D1 implementation
 // Full working version of backend for reference.
 
-use axum::{extract::{Query, State}, response::IntoResponse, http::StatusCode, routing::get, Json, Router};
+use axum::{
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    routing::get,
+    Json,
+    Router,
+};
 use serde::{Deserialize, Serialize};
-use tower_service::Service;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
+use tower_service::Service;
+use worker::send::SendFuture;
 use worker::*;
 
 #[derive(Serialize)]
@@ -45,7 +55,7 @@ pub struct Song {
 }
 
 pub trait SongStore {
-    fn get_daily_selection(&self) -> Option<Song>;
+    fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>>;
 }
 
 pub struct InMemorySongStore {
@@ -92,8 +102,58 @@ impl Default for InMemorySongStore {
 }
 
 impl SongStore for InMemorySongStore {
-    fn get_daily_selection(&self) -> Option<Song> {
-        self.songs.first().cloned()
+    fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            self.songs.first().cloned()
+        }))
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct D1Song {
+    pub id: String,
+    pub title: String,
+    pub artist: String,
+    pub era: String,
+    pub genre_tags: String, // Stored as a JSON-serialized array in SQLite/D1
+    pub youtube_id: String,
+}
+
+pub struct D1SongStore {
+    pub db: worker::d1::D1Database,
+}
+
+impl D1SongStore {
+    pub fn new(db: worker::d1::D1Database) -> Self {
+        Self { db }
+    }
+}
+
+impl SongStore for D1SongStore {
+    fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            let statement = self.db.prepare(
+                "SELECT id, title, artist, era, genre_tags, youtube_id FROM songs ORDER BY id ASC LIMIT 1"
+            );
+            match statement.first::<D1Song>(None).await {
+                Ok(Some(d1_song)) => {
+                    let genre_tags: Vec<String> = serde_json::from_str(&d1_song.genre_tags).unwrap_or_default();
+                    Some(Song {
+                        id: d1_song.id,
+                        title: d1_song.title,
+                        artist: d1_song.artist,
+                        era: d1_song.era,
+                        genre_tags,
+                        youtube_id: d1_song.youtube_id,
+                    })
+                }
+                Ok(None) => None,
+                Err(e) => {
+                    worker::console_error!("Error querying D1 for daily selection: {:?}", e);
+                    None
+                }
+            }
+        }))
     }
 }
 
@@ -105,7 +165,7 @@ pub struct AppState {
 pub async fn get_current_daily_selection(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    match state.song_store.get_daily_selection() {
+    match state.song_store.get_daily_selection().await {
         Some(song) => Json(song).into_response(),
         None => (StatusCode::NOT_FOUND, Json("No song found")).into_response(),
     }
@@ -131,12 +191,14 @@ pub fn app() -> Router {
 #[event(fetch)]
 async fn fetch(
     req: HttpRequest,
-    _env: Env,
+    env: Env,
     _ctx: Context,
 ) -> Result<http::Response<axum::body::Body>> {
     console_error_panic_hook::set_once();
 
-    let mut router = app();
+    let db = env.d1("DB")?;
+    let store = Arc::new(D1SongStore::new(db));
+    let mut router = app_with_store(store);
     let response = router
         .call(req)
         .await
@@ -192,7 +254,7 @@ mod tests {
     #[tokio::test]
     async fn test_in_memory_song_store_returns_first_song() {
         let store = InMemorySongStore::new();
-        let current = store.get_daily_selection();
+        let current = store.get_daily_selection().await;
         assert!(current.is_some());
         let song = current.unwrap();
         assert_eq!(song.id, "1");

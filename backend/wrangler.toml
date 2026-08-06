@@ -4,3 +4,10 @@ compatibility_date = "2026-08-03"
 
 [build]
 command = "cargo install -q worker-build && worker-build --release"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "daily_rock_db"
+database_id = "581c7b0a-eec9-44b7-ad64-457222e5950d"
+migrations_dir = "migrations"
+

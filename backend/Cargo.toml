@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-worker = { version = "0.8.5", features = ["http"] }
+worker = { version = "0.8.5", features = ["http", "d1"] }
 axum = { version = "0.8.9", default-features = false, features = ["json", "query"] }
 http = "1.1"
 tower-service = "0.3"

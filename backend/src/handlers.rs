@@ -36,7 +36,7 @@ pub async fn greet(Query(query): Query<GreetQuery>) -> impl IntoResponse {
 pub async fn get_current_daily_selection(
     State(state): State<crate::AppState>,
 ) -> impl IntoResponse {
-    match state.song_store.get_daily_selection() {
+    match state.song_store.get_daily_selection().await {
         Some(song) => Json(song).into_response(),
         None => (StatusCode::NOT_FOUND, Json("No song found")).into_response(),
     }
