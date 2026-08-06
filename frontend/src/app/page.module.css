@@ -74,20 +74,12 @@
   color: var(--text-secondary);
 }
 
-.healthSection {
+.selectionSection {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.sectionTitle {
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-secondary);
+  gap: 16px;
+  margin-top: 24px;
 }
 
 .statusBox {
@@ -109,12 +101,53 @@
 .statusBox.error {
   border-color: rgba(255, 77, 79, 0.3);
   background-color: rgba(255, 77, 79, 0.05);
+  align-items: flex-start;
+}
+
+.statusBox.warning {
+  border-color: rgba(250, 173, 20, 0.3);
+  background-color: rgba(250, 173, 20, 0.05);
+  align-items: flex-start;
+}
+
+.errorContent,
+.warningContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.errorTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff4d4f;
+  margin: 0;
+}
+
+.errorMessage {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.warningTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #faad14;
+  margin: 0;
+}
+
+.warningMessage {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 .statusDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  margin-top: 5px;
   box-shadow: 0 0 8px currentColor;
 }
 
@@ -133,13 +166,94 @@
   }
 }
 
-.code {
-  font-family: var(--font-geist-mono), monospace;
+/* Song Card Styles */
+.songCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 24px;
+  border-radius: 12px;
+  background-color: #202024;
+  border: 1px solid var(--border-color);
+  transition: border-color 0.2s ease;
+}
+
+.songCard:hover {
+  border-color: var(--accent-color);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.cardBadge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent-color);
+}
+
+.eraTag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.songTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.songArtist {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0 0 20px 0;
+}
+
+.genreTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.genreTag {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.mediaPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 120px;
+  border-radius: 8px;
+  background-color: #121214;
+  border: 1px dashed var(--border-color);
+  color: var(--text-secondary);
   font-size: 13px;
-  color: #f7768e;
-  background-color: #24283b;
-  padding: 2px 6px;
-  border-radius: 4px;
+}
+
+.playIcon {
+  font-size: 16px;
+  color: var(--accent-color);
 }
 
 .ctas {
