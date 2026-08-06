@@ -33,12 +33,15 @@ pub fn app() -> Router {
 #[event(fetch)]
 async fn fetch(
     req: HttpRequest,
-    _env: Env,
+    env: Env,
     _ctx: Context,
 ) -> Result<http::Response<axum::body::Body>> {
     console_error_panic_hook::set_once();
 
-    let mut router = app();
+    let db = env.d1("DB")?;
+    let store = Arc::new(store::D1SongStore::new(db));
+
+    let mut router = app_with_store(store);
     let response = router
         .call(req)
         .await
