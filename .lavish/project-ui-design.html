@@ -1,0 +1,1227 @@
+<title>Daily Rock — Project UI Design</title>
+<style>
+  :root {
+    --page-bg: #faf7f1;
+    --page-bg-2: #f2ecdf;
+    --page-text: #221d17;
+    --page-text-dim: #6f6656;
+    --page-text-faint: #a89d89;
+    --page-border: #e6dfcd;
+    --accent: #ff3e3e;
+    --accent-ink: #c81e2c;
+    --accent-hover: #ff1f1f;
+    --accent-soft: rgba(255, 62, 62, 0.12);
+    --success: #52c41a;
+    --success-ink: #1f7a34;
+    --success-soft: rgba(82, 196, 26, 0.14);
+    --warning: #faad14;
+    --warning-ink: #9a5b06;
+    --warning-soft: rgba(250, 173, 20, 0.16);
+
+    /* tokens for the product itself, scoped inside .phone/.screen */
+    --app-bg: #fffcf6;
+    --app-surface: #ffffff;
+    --app-surface-2: #f5efe2;
+    --app-border: #e8e0cd;
+    --app-text: #221d17;
+    --app-text-dim: #736a58;
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  *, *::before, *::after { min-width: 0; }
+
+  html, body { background: var(--page-bg); }
+
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--page-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  img, svg { max-width: 100%; }
+
+  a { color: inherit; }
+
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 72px;
+  }
+
+  /* ---------- shared bits ---------- */
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+
+  .section-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 6px 0 0;
+  }
+
+  .section-lede {
+    color: var(--page-text-dim);
+    font-size: 15px;
+    max-width: 62ch;
+    margin: 10px 0 0;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 4px 10px 4px 8px;
+    border-radius: 100px;
+    border: 1px solid var(--page-border);
+    white-space: nowrap;
+  }
+
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+
+  .badge.live { color: var(--success-ink); border-color: rgba(82, 196, 26, 0.35); background: var(--success-soft); }
+  .badge.live .badge-dot { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+  .badge.proposed { color: var(--accent-ink); border-color: rgba(255, 62, 62, 0.32); background: var(--accent-soft); }
+  .badge.proposed .badge-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+  /* ---------- hero ---------- */
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--page-border);
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-mark {
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .hero h1 {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .hero p.lede {
+    max-width: 68ch;
+    color: var(--page-text-dim);
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .hero-scope {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .jumpnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .jumpnav a {
+    text-decoration: none;
+    color: var(--page-text-dim);
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+  }
+
+  .jumpnav a:hover { color: var(--page-text); border-color: var(--page-border); }
+
+  /* ---------- foundation strip ---------- */
+
+  .foundation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 28px;
+  }
+
+  .swatch-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .swatch {
+    flex: 1;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--page-border);
+    display: flex;
+    align-items: flex-end;
+    padding: 5px;
+  }
+
+  .swatch span {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: rgba(255,255,255,0.75);
+    background: rgba(0,0,0,0.35);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  .foundation-card {
+    border: 1px solid var(--page-border);
+    background: var(--page-bg-2);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .foundation-card h3 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--page-text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .type-sample .display { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .type-sample .body { font-size: 14px; color: var(--page-text-dim); margin: 0 0 10px; }
+  .type-sample .mono { font-family: var(--font-mono); font-size: 12px; color: var(--accent-ink); }
+
+  /* ---------- nav decision ---------- */
+
+  .nav-compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .nav-mock {
+    border: 1px solid var(--page-border);
+    border-radius: 14px;
+    background: var(--page-bg-2);
+    padding: 16px;
+  }
+
+  .nav-mock h4 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .nav-mock p {
+    margin: 0 0 14px;
+    font-size: 12.5px;
+    color: var(--page-text-dim);
+  }
+
+  .mini-tabbar {
+    display: flex;
+    justify-content: space-around;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    border-radius: 12px;
+    padding: 10px 6px 8px;
+  }
+
+  .mini-tab { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--app-text-dim); }
+  .mini-tab.active { color: var(--accent-ink); }
+  .mini-tab .ico { font-size: 15px; }
+
+  .mini-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--app-text-dim);
+  }
+
+  .mini-topbar .links { display: flex; gap: 14px; }
+  .mini-topbar .links span.active { color: var(--accent-ink); font-weight: 700; }
+
+  .decision-tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--success-ink);
+  }
+
+  /* ---------- phone gallery ---------- */
+
+  .gallery {
+    display: flex;
+    gap: 26px;
+    overflow-x: auto;
+    padding: 6px 4px 22px;
+    margin-top: 28px;
+    scroll-snap-type: x proximity;
+  }
+
+  .gallery::-webkit-scrollbar { height: 8px; }
+  .gallery::-webkit-scrollbar-thumb { background: var(--page-border); border-radius: 8px; }
+
+  .screen-slot {
+    flex: none;
+    width: 300px;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .slot-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .slot-label h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .slot-caption {
+    font-size: 12px;
+    color: var(--page-text-dim);
+    min-height: 32px;
+  }
+
+  .phone {
+    width: 300px;
+    height: 610px;
+    border-radius: 34px;
+    border: 1px solid #ddd4bd;
+    background: linear-gradient(180deg, #fbf8f1, #ede4cf);
+    padding: 10px;
+    box-shadow: 0 30px 60px -30px rgba(70,55,20,0.28), inset 0 0 0 1px rgba(255,255,255,0.7);
+    position: relative;
+  }
+
+  .phone::before {
+    content: "";
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 5px;
+    border-radius: 4px;
+    background: #000;
+    z-index: 2;
+  }
+
+  .screen {
+    width: 100%;
+    height: 100%;
+    background: var(--app-bg);
+    color: var(--app-text);
+    border-radius: 26px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    position: relative;
+  }
+
+  .screen-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 34px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .screen-scroll::-webkit-scrollbar { width: 0; }
+
+  /* app-level components reused across screens */
+
+  .app-brand { display: flex; align-items: center; gap: 8px; }
+  .app-brand .mark { font-size: 18px; }
+  .app-brand .name { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+
+  .stat-chip {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--app-text-dim);
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+
+  .app-card {
+    background: var(--app-surface-2);
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .app-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+  .app-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-ink);
+  }
+
+  .era-pill {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: rgba(34,29,23,0.045);
+    border: 1px solid rgba(34,29,23,0.09);
+    color: var(--app-text-dim);
+  }
+
+  .song-title { font-size: 18px; font-weight: 700; margin: 2px 0 2px; }
+  .song-artist { font-size: 13px; color: var(--app-text-dim); margin: 0 0 12px; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .tag {
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: rgba(34,29,23,0.03);
+    border: 1px solid var(--app-border);
+    color: var(--app-text-dim);
+  }
+  .tag.on { color: var(--accent-ink); border-color: rgba(255,62,62,0.4); background: var(--accent-soft); }
+
+  .player {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 8px;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 140% at 20% 15%, #262024 0%, #17151a 55%, #0c0b0e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .player .yt-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    color: var(--app-text-dim);
+    background: rgba(0,0,0,0.5);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .play-btn {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 15px;
+    box-shadow: 0 8px 20px rgba(255,62,62,0.35);
+  }
+  .player .scrub {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.12);
+  }
+  .player .scrub::after { content: ""; display: block; width: 38%; height: 100%; background: var(--accent); }
+
+  /* rating form (inline, in-context) */
+  .rf { display: flex; flex-direction: column; gap: 10px; }
+  .rf label.small { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--app-text-dim); font-weight: 700; }
+
+  .stars-inline { display: flex; gap: 6px; }
+  .stars-inline .star { font-size: 22px; color: #d9d0ba; }
+  .stars-inline .star.fill { color: var(--accent-ink); }
+
+  .note-box {
+    background: var(--app-bg);
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    color: var(--app-text-dim);
+    min-height: 46px;
+  }
+  .note-box.filled { color: var(--app-text); }
+
+  .btn {
+    height: 38px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:disabled { background: #3a2323; color: #7a5555; cursor: not-allowed; }
+  .btn-ghost { background: transparent; border: 1px solid var(--app-border); color: var(--app-text); }
+
+  .toast {
+    position: absolute;
+    top: 10px; left: 50%; transform: translateX(-50%);
+    background: var(--success-soft);
+    border: 1px solid rgba(82,196,26,0.4);
+    color: var(--success-ink);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    z-index: 3;
+  }
+  .toast .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  .next-card {
+    animation: riseIn 0.5s ease both;
+  }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .next-card, .toast { animation: none !important; }
+  }
+
+  .replay-btn {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--app-text-dim);
+    background: none;
+    border: 1px dashed var(--app-border);
+    padding: 4px 9px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .replay-btn:hover { color: var(--app-text); border-color: var(--app-text-dim); }
+
+  /* login screen */
+  .login-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 0 6px; }
+  .login-mid .mark { font-size: 40px; }
+  .login-mid h2 { margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+  .login-mid p { margin: 0; font-size: 12.5px; color: var(--app-text-dim); max-width: 22ch; }
+  .google-btn {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; color: #1f1f1f; font-weight: 600; font-size: 13px;
+    border: 1px solid var(--app-border);
+    border-radius: 8px; padding: 0 16px; height: 42px; width: 100%;
+    justify-content: center;
+  }
+  .private-note {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; color: var(--app-text-dim);
+    font-family: var(--font-mono);
+  }
+
+  /* history list */
+  .search-row { display: flex; align-items: center; gap: 8px; background: var(--app-surface-2); border: 1px solid var(--app-border); border-radius: 8px; padding: 8px 10px; }
+  .search-row input::placeholder { color: var(--app-text-dim); }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 10.5px; padding: 4px 10px; border-radius: 100px;
+    border: 1px solid var(--app-border); color: var(--app-text-dim);
+    background: var(--app-surface-2); cursor: pointer; user-select: none;
+  }
+  .chip.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+
+  .hist-row {
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 11px 12px; border-radius: 10px; border: 1px solid var(--app-border); background: var(--app-surface-2);
+  }
+  .hist-row.hide { display: none; }
+  .hist-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .hist-top .t { font-size: 12.5px; font-weight: 700; }
+  .hist-top .d { font-family: var(--font-mono); font-size: 9.5px; color: var(--app-text-dim); flex: none; }
+  .hist-artist { font-size: 11px; color: var(--app-text-dim); }
+  .hist-stars { font-size: 11px; color: var(--accent-ink); letter-spacing: 1px; }
+  .hist-note { font-size: 11px; color: var(--app-text-dim); }
+  .hist-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+  .hist-tags .tag { font-size: 9px; padding: 2px 7px; }
+
+  /* share screen */
+  .seg {
+    display: flex; background: var(--app-surface-2); border: 1px solid var(--app-border); border-radius: 8px; padding: 3px;
+  }
+  .seg button {
+    flex: 1; background: none; border: none; color: var(--app-text-dim); font-size: 11.5px; font-weight: 700;
+    padding: 7px 0; border-radius: 6px; cursor: pointer;
+  }
+  .seg button.active { background: var(--app-bg); color: var(--app-text); box-shadow: 0 1px 3px rgba(70,55,20,0.12); }
+
+  .link-row { display: flex; align-items: center; gap: 8px; background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 8px; padding: 8px 10px; font-family: var(--font-mono); font-size: 10.5px; color: var(--app-text-dim); }
+  .link-row .u { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .icon-btn { border: none; background: var(--app-surface-2); color: var(--app-text-dim); width: 26px; height: 26px; border-radius: 6px; display:flex; align-items:center; justify-content:center; font-size: 12px; cursor:pointer; flex: none; }
+
+  .visitor-banner {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--warning-soft); border: 1px solid rgba(250,173,20,0.4); color: var(--warning-ink);
+    font-size: 11px; font-weight: 600; padding: 8px 10px; border-radius: 8px;
+  }
+
+  .pane { display: none; flex-direction: column; gap: 12px; }
+  .pane.active { display: flex; }
+
+  /* ---------- rating anatomy ---------- */
+
+  .anatomy-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 34px;
+    margin-top: 28px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .anatomy-wrap { grid-template-columns: 1fr; }
+  }
+
+  .anatomy-live {
+    background: var(--app-bg);
+    border: 1px solid var(--page-border);
+    border-radius: 16px;
+    padding: 26px;
+  }
+  .anatomy-live .app-card { max-width: 360px; }
+
+  .stars-live { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+  .stars-live input { position: absolute; opacity: 0; pointer-events: none; }
+  .stars-live label {
+    font-size: 30px; color: #d9d0ba; cursor: pointer; line-height: 1;
+    padding: 6px; margin: -6px;
+    transition: color 0.12s ease, transform 0.12s ease;
+  }
+  .stars-live label:hover,
+  .stars-live label:hover ~ label { color: #b3a689; }
+  .stars-live input:checked ~ label { color: var(--accent-ink); }
+  .stars-live:hover label { color: #d9d0ba; }
+  .stars-live:hover input:checked ~ label { color: var(--accent-ink); }
+
+  .live-textarea {
+    width: 100%;
+    background: var(--app-surface-2);
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    color: var(--app-text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 10px;
+    resize: none;
+    min-height: 64px;
+  }
+  .live-textarea::placeholder { color: var(--app-text-dim); }
+  .char-count { font-family: var(--font-mono); font-size: 10px; color: var(--app-text-dim); text-align: right; }
+
+  .anatomy-notes { display: flex; flex-direction: column; gap: 16px; }
+
+  .state-strip { display: flex; flex-direction: column; gap: 10px; }
+  .state-strip .row { display: flex; align-items: center; gap: 12px; }
+  .state-strip .row .lbl { width: 92px; flex: none; font-family: var(--font-mono); font-size: 11px; color: var(--page-text-dim); }
+  .mini-btn { height: 30px; padding: 0 14px; border-radius: 7px; font-size: 12px; font-weight: 700; border: none; display: inline-flex; align-items: center; gap: 6px; }
+  .mini-btn.default { background: var(--accent); color: #fff; }
+  .mini-btn.disabled { background: #f6e4e2; color: #c9a29e; }
+  .mini-btn.loading { background: var(--accent); color: #fff; opacity: 0.85; }
+  .mini-btn.success { background: var(--success); color: #0b1a04; }
+  .spin { width: 11px; height: 11px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .callout {
+    border: 1px solid var(--page-border);
+    background: var(--page-bg-2);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 13px;
+    color: var(--page-text-dim);
+  }
+  .callout b { color: var(--page-text); }
+
+  /* ---------- open questions ---------- */
+
+  .oq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 26px;
+  }
+
+  .oq-card {
+    border: 1px solid var(--page-border);
+    background: var(--page-bg-2);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .oq-kind {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .oq-kind.decided { color: var(--success-ink); }
+  .oq-kind.open { color: var(--warning-ink); }
+
+  .oq-card h5 { margin: 0; font-size: 14.5px; font-weight: 700; }
+  .oq-card p { margin: 0; font-size: 12.5px; color: var(--page-text-dim); }
+
+  footer.colophon {
+    border-top: 1px solid var(--page-border);
+    padding-top: 20px;
+    font-size: 11.5px;
+    color: var(--page-text-faint);
+    font-family: var(--font-mono);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .page { padding: 40px 16px 72px; gap: 52px; }
+    .hero h1 { font-size: 30px; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="hero-top">
+      <span class="hero-mark">🎸</span>
+      <span class="eyebrow">daily-rock · product UI design</span>
+    </div>
+    <h1>Taking the app past the current-song card</h1>
+    <p class="lede">
+      Today the app is one screen: fetch the current song, show it, done. The MVP spec
+      (#1) needs five more surfaces before the core loop is real — rate the song you just
+      heard, watch the next one unlock, browse what you've already heard, and let a friend
+      look without an account. This lays out those screens against the app's existing dark
+      theme, using real copy and the actual field names from the backend.
+    </p>
+    <div class="hero-scope">
+      <span class="badge live"><span class="badge-dot"></span>#12 today card — live</span>
+      <span class="badge proposed"><span class="badge-dot"></span>#7 YouTube embed</span>
+      <span class="badge proposed"><span class="badge-dot"></span>#26 rating form</span>
+      <span class="badge proposed"><span class="badge-dot"></span>#4 listening history</span>
+      <span class="badge proposed"><span class="badge-dot"></span>#8 share link</span>
+      <span class="badge proposed"><span class="badge-dot"></span>#6 Google sign-in</span>
+    </div>
+    <nav class="jumpnav">
+      <a href="#foundation">Foundation</a>
+      <a href="#navigation">Navigation</a>
+      <a href="#screens">Screens</a>
+      <a href="#rating-anatomy">Rating form anatomy</a>
+      <a href="#open-questions">Open questions</a>
+    </nav>
+  </header>
+
+  <section id="foundation">
+    <span class="eyebrow">01 · foundation</span>
+    <h2 class="section-title">Same structure as the app, retuned bright</h2>
+    <p class="section-lede">
+      <code>page.module.css</code> ships dark today. Same shape — surface depth, one red
+      accent, status colors — just flipped to a bright, warm-neutral base instead of near-black.
+      Every screen below reuses these tokens rather than inventing a second visual language.
+    </p>
+    <div class="foundation-grid">
+      <div class="foundation-card">
+        <h3>Surface depth</h3>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#fffcf6;"><span>bg</span></div>
+          <div class="swatch" style="background:#ffffff;"><span>surface</span></div>
+          <div class="swatch" style="background:#f5efe2;"><span>surface-2</span></div>
+        </div>
+      </div>
+      <div class="foundation-card">
+        <h3>Accent &amp; status</h3>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#ff3e3e;"><span>accent</span></div>
+          <div class="swatch" style="background:#52c41a;"><span>success</span></div>
+          <div class="swatch" style="background:#faad14;"><span>warning</span></div>
+          <div class="swatch" style="background:#ff4d4f;"><span>error</span></div>
+        </div>
+      </div>
+      <div class="foundation-card type-sample">
+        <h3>Type</h3>
+        <p class="display">Gimme Shelter</p>
+        <p class="body">The Rolling Stones · one sans family, weight does the work</p>
+        <p class="mono">1969 · BLUES ROCK</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="navigation">
+    <span class="eyebrow">02 · navigation</span>
+    <h2 class="section-title">One screen becomes four — it needs a nav</h2>
+    <p class="section-lede">
+      There's no navigation chrome today because there's nowhere to go. Once History and
+      Share exist, the owner needs a way to move between them. Proposing a bottom tab bar
+      on mobile widths (this is meant to feel installed, per #9) collapsing to a slim top
+      bar on desktop — same three destinations either way.
+    </p>
+    <div class="nav-compare">
+      <div class="nav-mock">
+        <h4>Mobile — bottom tabs</h4>
+        <p>Thumb-reachable, matches the PWA/home-screen feel from #9.</p>
+        <div class="mini-tabbar">
+          <div class="mini-tab active"><span class="ico">🎵</span>Today</div>
+          <div class="mini-tab"><span class="ico">🕓</span>History</div>
+          <div class="mini-tab"><span class="ico">🔗</span>Share</div>
+        </div>
+        <span class="decision-tag">→ used in the phone mockups below</span>
+      </div>
+      <div class="nav-mock">
+        <h4>Desktop / wide viewport — top bar</h4>
+        <p>Same three links, promoted to a persistent header once there's width to spare.</p>
+        <div class="mini-topbar">
+          <span>🎸 Daily Rock</span>
+          <div class="links">
+            <span class="active">Today</span>
+            <span>History</span>
+            <span>Share</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens">
+    <span class="eyebrow">03 · screens</span>
+    <h2 class="section-title">Every state, in order of the loop</h2>
+    <p class="section-lede">
+      Sign in once, then repeat: listen → rate → next song unlocks. History and Share sit
+      one tab away. Scroll the strip — six screens, left to right.
+    </p>
+
+    <div class="gallery">
+
+      <!-- SCREEN 1: sign in -->
+      <div class="screen-slot">
+        <div class="slot-label">
+          <h4>Sign in</h4>
+          <span class="badge proposed"><span class="badge-dot"></span>#6</span>
+        </div>
+        <p class="slot-caption">Google OAuth only — no password to manage, matches "single owner" from the spec.</p>
+        <div class="phone"><div class="screen">
+          <div class="screen-scroll" style="justify-content:center;">
+            <div class="login-mid">
+              <span class="mark">🎸</span>
+              <h2>Daily Rock</h2>
+              <p>Systematically listening to rock music, one song a day.</p>
+              <button class="google-btn">
+                <svg width="16" height="16" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.61z"></path><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.19l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.36 0-4.36-1.6-5.07-3.74H.9v2.33A9 9 0 0 0 9 18z"></path><path fill="#FBBC05" d="M3.93 10.67A5.4 5.4 0 0 1 3.65 9c0-.58.1-1.15.28-1.67V4.99H.9A9 9 0 0 0 0 9c0 1.45.35 2.83.9 4.01l3.03-2.34z"></path><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .9 4.99l3.03 2.34C4.64 5.18 6.64 3.58 9 3.58z"></path></svg>
+                Continue with Google
+              </button>
+              <span class="private-note">🔒 private — only you can sign in</span>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- SCREEN 2: today, idle -->
+      <div class="screen-slot">
+        <div class="slot-label">
+          <h4>Today — listen</h4>
+          <span class="badge proposed"><span class="badge-dot"></span>#7</span>
+        </div>
+        <p class="slot-caption">Player replaces the "YouTube Player Placeholder" box from the current build.</p>
+        <div class="phone"><div class="screen">
+          <div class="screen-scroll">
+            <div class="app-brand"><span class="mark">🎸</span><span class="name">Daily Rock</span><span class="stat-chip">Rated: 4</span></div>
+            <div class="app-card">
+              <div class="app-card-head">
+                <span class="app-eyebrow">Today's selection</span>
+                <span class="era-pill">1969</span>
+              </div>
+              <p class="song-title">Gimme Shelter</p>
+              <p class="song-artist">The Rolling Stones</p>
+              <div class="tag-row">
+                <span class="tag on">Blues Rock</span>
+                <span class="tag on">British Invasion</span>
+              </div>
+              <div class="player">
+                <span class="yt-badge">▶ YOUTUBE</span>
+                <div class="play-btn">▶</div>
+                <div class="scrub"></div>
+              </div>
+            </div>
+            <div class="app-card rf">
+              <label class="small">Your rating</label>
+              <div class="stars-inline">
+                <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+              </div>
+              <label class="small">Note</label>
+              <div class="note-box">What stood out this listen…</div>
+              <button class="btn btn-primary" disabled>Save rating</button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- SCREEN 3: today, filled -->
+      <div class="screen-slot">
+        <div class="slot-label">
+          <h4>Today — rated, ready to submit</h4>
+          <span class="badge proposed"><span class="badge-dot"></span>#26</span>
+        </div>
+        <p class="slot-caption">4 stars picked, note written — submit enables once both are valid.</p>
+        <div class="phone"><div class="screen">
+          <div class="screen-scroll">
+            <div class="app-brand"><span class="mark">🎸</span><span class="name">Daily Rock</span><span class="stat-chip">Rated: 4</span></div>
+            <div class="app-card">
+              <div class="app-card-head">
+                <span class="app-eyebrow">Today's selection</span>
+                <span class="era-pill">1969</span>
+              </div>
+              <p class="song-title">Gimme Shelter</p>
+              <p class="song-artist">The Rolling Stones</p>
+              <div class="tag-row">
+                <span class="tag on">Blues Rock</span>
+                <span class="tag on">British Invasion</span>
+              </div>
+              <div class="player">
+                <span class="yt-badge">▶ YOUTUBE</span>
+                <div class="play-btn">▶</div>
+                <div class="scrub"></div>
+              </div>
+            </div>
+            <div class="app-card rf">
+              <label class="small">Your rating</label>
+              <div class="stars-inline">
+                <span class="star fill">★</span><span class="star fill">★</span><span class="star fill">★</span><span class="star fill">★</span><span class="star">★</span>
+              </div>
+              <label class="small">Note</label>
+              <div class="note-box filled">That guitar tone at 1:40 still gets me. Merry Clayton's vocal is unreal.</div>
+              <button class="btn btn-primary">Save rating</button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- SCREEN 4: transition -->
+      <div class="screen-slot">
+        <div class="slot-label">
+          <h4>Rated → next unlocks</h4>
+          <span class="badge proposed"><span class="badge-dot"></span>#26</span>
+        </div>
+        <p class="slot-caption">Toast confirms the save, card cross-fades to the next chronological song.</p>
+        <div class="phone"><div class="screen">
+          <div id="toast" class="toast"><span class="dot"></span>Rating saved</div>
+          <div class="screen-scroll">
+            <div class="app-brand"><span class="mark">🎸</span><span class="name">Daily Rock</span><span class="stat-chip">Rated: 5</span></div>
+            <div id="nextCard" class="app-card next-card">
+              <div class="app-card-head">
+                <span class="app-eyebrow">Today's selection</span>
+                <span class="era-pill">1974</span>
+              </div>
+              <p class="song-title">Sweet Home Alabama</p>
+              <p class="song-artist">Lynyrd Skynyrd</p>
+              <div class="tag-row">
+                <span class="tag on">Southern Rock</span>
+                <span class="tag on">Guitar Rock</span>
+              </div>
+              <div class="player">
+                <span class="yt-badge">▶ YOUTUBE</span>
+                <div class="play-btn">▶</div>
+                <div class="scrub" style="--w:0%"></div>
+              </div>
+            </div>
+            <button class="replay-btn" id="replayBtn" type="button">↻ replay transition</button>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- SCREEN 5: history -->
+      <div class="screen-slot">
+        <div class="slot-label">
+          <h4>History</h4>
+          <span class="badge proposed"><span class="badge-dot"></span>#4</span>
+        </div>
+        <p class="slot-caption">Tag chips are live — tap one to filter the four sample entries.</p>
+        <div class="phone"><div class="screen">
+          <div class="screen-scroll">
+            <div class="app-brand"><span class="mark">🕓</span><span class="name">History</span></div>
+            <div class="search-row">
+              <span style="color:var(--app-text-dim);">⌕</span>
+              <input style="background:none;border:none;color:var(--app-text);font-size:12px;outline:none;width:100%;" placeholder="Search title or artist" />
+            </div>
+            <div class="chip-row" id="tagChips">
+              <span class="chip active" data-tag="all">All</span>
+              <span class="chip" data-tag="Blues Rock">Blues Rock</span>
+              <span class="chip" data-tag="Hard Rock">Hard Rock</span>
+              <span class="chip" data-tag="Southern Rock">Southern Rock</span>
+              <span class="chip" data-tag="Roots Rock">Roots Rock</span>
+            </div>
+            <div id="histList" style="display:flex;flex-direction:column;gap:8px;">
+              <div class="hist-row" data-tags="Roots Rock">
+                <div class="hist-top"><span class="t">Johnny B. Goode</span><span class="d">1958-06-02</span></div>
+                <span class="hist-artist">Chuck Berry</span>
+                <span class="hist-stars">★★★★☆</span>
+                <span class="hist-note">The riff that started it all — still fresh.</span>
+                <div class="hist-tags"><span class="tag">Roots Rock</span></div>
+              </div>
+              <div class="hist-row" data-tags="Hard Rock">
+                <div class="hist-top"><span class="t">Whole Lotta Love</span><span class="d">1969-10-14</span></div>
+                <span class="hist-artist">Led Zeppelin</span>
+                <span class="hist-stars">★★★★★</span>
+                <span class="hist-note">That theremin breakdown is unhinged, in a good way.</span>
+                <div class="hist-tags"><span class="tag">Hard Rock</span></div>
+              </div>
+              <div class="hist-row" data-tags="Roots Rock">
+                <div class="hist-top"><span class="t">Fortunate Son</span><span class="d">1969-11-02</span></div>
+                <span class="hist-artist">Creedence Clearwater Revival</span>
+                <span class="hist-stars">★★★★☆</span>
+                <span class="hist-note">Two minutes, no wasted motion.</span>
+                <div class="hist-tags"><span class="tag">Roots Rock</span></div>
+              </div>
+              <div class="hist-row" data-tags="Hard Rock">
+                <div class="hist-top"><span class="t">Paranoid</span><span class="d">1970-09-18</span></div>
+                <span class="hist-artist">Black Sabbath</span>
+                <span class="hist-stars">★★★★★</span>
+                <span class="hist-note">Wrote it in 20 minutes and it's this good?</span>
+                <div class="hist-tags"><span class="tag">Hard Rock</span></div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- SCREEN 6: share -->
+      <div class="screen-slot">
+        <div class="slot-label">
+          <h4>Share link</h4>
+          <span class="badge proposed"><span class="badge-dot"></span>#8</span>
+        </div>
+        <p class="slot-caption">One frame, two audiences — switch the segmented control to preview both.</p>
+        <div class="phone"><div class="screen">
+          <div class="screen-scroll">
+            <div class="app-brand"><span class="mark">🔗</span><span class="name">Share</span></div>
+            <div class="seg">
+              <button type="button" class="active" data-pane="owner">You (owner)</button>
+              <button type="button" data-pane="visitor">Friend (visitor)</button>
+            </div>
+
+            <div class="pane active" id="pane-owner">
+              <div class="app-card">
+                <div class="app-card-head"><span class="app-eyebrow">Read-only link</span></div>
+                <p style="font-size:11.5px;color:var(--app-text-dim);margin:0 0 10px;">Anyone with this link can view your list and history — no account needed.</p>
+                <div class="link-row">
+                  <span class="u">dailyrock.app/s/8f2c1a9e</span>
+                  <button class="icon-btn" title="Copy link">⧉</button>
+                </div>
+              </div>
+              <button class="btn btn-ghost">Revoke link</button>
+            </div>
+
+            <div class="pane" id="pane-visitor">
+              <div class="visitor-banner">👁 Viewing a shared history — read only</div>
+              <div class="hist-row">
+                <div class="hist-top"><span class="t">Paranoid</span><span class="d">1970-09-18</span></div>
+                <span class="hist-artist">Black Sabbath</span>
+                <span class="hist-stars">★★★★★</span>
+                <span class="hist-note">Wrote it in 20 minutes and it's this good?</span>
+              </div>
+              <div class="hist-row">
+                <div class="hist-top"><span class="t">Fortunate Son</span><span class="d">1969-11-02</span></div>
+                <span class="hist-artist">Creedence Clearwater Revival</span>
+                <span class="hist-stars">★★★★☆</span>
+                <span class="hist-note">Two minutes, no wasted motion.</span>
+              </div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="rating-anatomy">
+    <span class="eyebrow">04 · component detail</span>
+    <h2 class="section-title">The rating form, up close</h2>
+    <p class="section-lede">
+      This is the piece that's actually next on the branch — the backend for it (#25) just
+      landed. Left is a working star picker (click it); right is what each button state
+      needs to look like per the #26 acceptance criteria.
+    </p>
+    <div class="anatomy-wrap">
+      <div class="anatomy-live">
+        <div class="app-card" style="width:100%;">
+          <div class="app-card-head">
+            <span class="app-eyebrow">Rate this listen</span>
+            <span class="era-pill">daily_selection_id: dsl_0192</span>
+          </div>
+          <label class="small" style="display:block;margin-bottom:6px;">Rating (1–5, required)</label>
+          <div class="stars-live" id="starsLive">
+            <input type="radio" name="live-rating" id="lr5" value="5"><label for="lr5">★</label>
+            <input type="radio" name="live-rating" id="lr4" value="4"><label for="lr4">★</label>
+            <input type="radio" name="live-rating" id="lr3" value="3" checked><label for="lr3">★</label>
+            <input type="radio" name="live-rating" id="lr2" value="2"><label for="lr2">★</label>
+            <input type="radio" name="live-rating" id="lr1" value="1"><label for="lr1">★</label>
+          </div>
+          <label class="small" style="display:block;margin:14px 0 6px;">Note (optional)</label>
+          <textarea class="live-textarea" id="liveNote" maxlength="280" placeholder="What stood out this listen…"></textarea>
+          <div class="char-count"><span id="liveCount">0</span>/280</div>
+          <button class="btn btn-primary" style="margin-top:12px;width:100%;">Save rating</button>
+        </div>
+      </div>
+
+      <div class="anatomy-notes">
+        <div class="state-strip">
+          <div class="row"><span class="lbl">default</span><button class="mini-btn default">Save rating</button><span style="font-size:11.5px;color:var(--page-text-dim);">no rating picked yet</span></div>
+          <div class="row"><span class="lbl">disabled</span><button class="mini-btn disabled">Save rating</button><span style="font-size:11.5px;color:var(--page-text-dim);">matches #26's "rating required, 1–5" validation</span></div>
+          <div class="row"><span class="lbl">loading</span><button class="mini-btn loading"><span class="spin"></span>Saving…</button><span style="font-size:11.5px;color:var(--page-text-dim);">POST /api/ratings in flight</span></div>
+          <div class="row"><span class="lbl">success</span><button class="mini-btn success">✓ Saved</button><span style="font-size:11.5px;color:var(--page-text-dim);">holds ~600ms before the next-song cross-fade</span></div>
+        </div>
+        <div class="callout">
+          <b>Field mapping.</b> Submits <code>{ daily_selection_id, rating, note }</code> to
+          <code>POST /api/ratings</code> — the exact payload shape from #25/#26. Star tap
+          targets are 42px (6px label padding around a 30px glyph) to clear the 44px
+          minimum comfortably on a phone screen.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="open-questions">
+    <span class="eyebrow">05 · decisions &amp; open questions</span>
+    <h2 class="section-title">What's settled, what still needs a call</h2>
+    <div class="oq-grid">
+      <div class="oq-card">
+        <span class="oq-kind decided">Decided</span>
+        <h5>No fraction-style progress bar</h5>
+        <p>The catalog is explicitly unbounded (spec: "must not assume a fixed length"), so the header shows a running count — "Rated: 4" — never "4 of 120".</p>
+      </div>
+      <div class="oq-card">
+        <span class="oq-kind decided">Decided</span>
+        <h5>Bottom tabs on mobile, top bar past ~768px</h5>
+        <p>Today / History / Share, same three destinations either layout — see the Navigation section above.</p>
+      </div>
+      <div class="oq-card">
+        <span class="oq-kind open">Open</span>
+        <h5>Do visitor links show the note text?</h5>
+        <p>Mockup shows notes in the visitor pane since the spec says share = "view the list and history." Worth confirming — notes can get personal.</p>
+      </div>
+      <div class="oq-card">
+        <span class="oq-kind open">Open</span>
+        <h5>History: infinite scroll or paged?</h5>
+        <p>Single-owner scale makes infinite scroll simplest to build; paging only matters once the list is very long.</p>
+      </div>
+      <div class="oq-card">
+        <span class="oq-kind open">Open</span>
+        <h5>Transition timing</h5>
+        <p>Toast + 500ms cross-fade shown here. Worth trying in-hand before locking the duration — habit-loop feel is a judgment call, not a spec item.</p>
+      </div>
+      <div class="oq-card">
+        <span class="oq-kind open">Open</span>
+        <h5>Reorder UI (#5) not mocked yet</h5>
+        <p>Manual catalog reordering/insertion is in scope for the MVP but ships later in the build order — deliberately left out of this pass.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="colophon">
+    <span>daily-rock · design system source: frontend/src/app/page.module.css</span>
+    <span>mockups, not shipped components — annotate anything to change</span>
+  </footer>
+
+</div>
+
+<script>
+  // history tag filter
+  var chips = document.querySelectorAll('#tagChips .chip');
+  var rows = document.querySelectorAll('#histList .hist-row');
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      chips.forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      var tag = chip.getAttribute('data-tag');
+      rows.forEach(function (row) {
+        var tags = row.getAttribute('data-tags') || '';
+        row.classList.toggle('hide', tag !== 'all' && tags.indexOf(tag) === -1);
+      });
+    });
+  });
+
+  // share segmented control
+  var segButtons = document.querySelectorAll('.seg button');
+  segButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      segButtons.forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelectorAll('.pane').forEach(function (p) { p.classList.remove('active'); });
+      document.getElementById('pane-' + btn.getAttribute('data-pane')).classList.add('active');
+    });
+  });
+
+  // replay the rated -> next-song transition
+  var replayBtn = document.getElementById('replayBtn');
+  var toast = document.getElementById('toast');
+  var nextCard = document.getElementById('nextCard');
+  if (replayBtn) {
+    replayBtn.addEventListener('click', function () {
+      toast.style.animation = 'none';
+      nextCard.style.animation = 'none';
+      void toast.offsetWidth;
+      toast.style.opacity = '1';
+      nextCard.style.animation = 'riseIn 0.5s ease both';
+    });
+  }
+
+  // live char count on the rating-form anatomy textarea
+  var liveNote = document.getElementById('liveNote');
+  var liveCount = document.getElementById('liveCount');
+  if (liveNote) {
+    liveNote.addEventListener('input', function () {
+      liveCount.textContent = liveNote.value.length;
+    });
+  }
+</script>
