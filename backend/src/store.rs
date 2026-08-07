@@ -245,4 +245,34 @@ mod tests {
         let song3 = store.get_daily_selection().await.unwrap();
         assert_eq!(song3.id, "3");
     }
+
+    #[tokio::test]
+    async fn test_in_memory_song_store_concurrency() {
+        use std::sync::Arc;
+        let store = Arc::new(InMemorySongStore::new());
+        let mut handles = vec![];
+
+        for i in 1..=10 {
+            let store_clone = Arc::clone(&store);
+            let handle = tokio::spawn(async move {
+                let rating = Rating {
+                    id: format!("r_{}", i),
+                    daily_selection_id: "1".to_string(),
+                    rating: ((i % 5) + 1) as u8,
+                    note: Some(format!("Concurrency note {}", i)),
+                    timestamp: None,
+                };
+                store_clone.save_rating(rating).await.unwrap();
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.await.unwrap();
+        }
+
+        let ratings = store.ratings.lock().unwrap();
+        assert_eq!(ratings.len(), 1);
+        assert_eq!(ratings[0].daily_selection_id, "1");
+    }
 }

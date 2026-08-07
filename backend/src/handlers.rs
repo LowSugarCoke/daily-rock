@@ -61,6 +61,16 @@ pub async fn submit_rating(
             .into_response();
     }
 
+    if let Some(ref note) = payload.note {
+        if note.len() > 1024 {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json("Note must be 1024 characters or less"),
+            )
+                .into_response();
+        }
+    }
+
     // Generate a simple in-memory rating id
     let rating_id = {
         #[cfg(target_arch = "wasm32")]

@@ -164,6 +164,75 @@ describe("Home Component", () => {
     ).toBeInTheDocument();
   });
 
+  test("disables form elements and shows submitting status on submission", async () => {
+    let resolvePost: (
+      value: Response | PromiseLike<Response>
+    ) => void = () => {};
+    const postPromise = new Promise<Response>((resolve) => {
+      resolvePost = resolve;
+    });
+
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      const urlStr = typeof url === "string" ? url : (url as Request).url || "";
+      if (urlStr.includes("/api/ratings") && init?.method === "POST") {
+        return postPromise;
+      }
+      if (urlStr.includes("/api/daily_selection")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockSong,
+        } as Response;
+      }
+      return { ok: false, status: 404 } as Response;
+    });
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Loading today's selection...")
+      ).not.toBeInTheDocument();
+    });
+
+    // Select 4 stars and submit
+    const star4 = screen.getByLabelText("Rate 4 stars");
+    fireEvent.click(star4);
+
+    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    fireEvent.click(submitBtn);
+
+    // Assert submitting state - elements should be disabled and button text should change
+    expect(submitBtn).toBeDisabled();
+    expect(submitBtn).toHaveTextContent("Submitting...");
+    expect(
+      screen.getByPlaceholderText(
+        "Add private notes about this song (optional)..."
+      )
+    ).toBeDisabled();
+
+    for (let i = 1; i <= 5; i++) {
+      expect(
+        screen.getByLabelText(`Rate ${i} star${i > 1 ? "s" : ""}`)
+      ).toBeDisabled();
+    }
+
+    // Resolve POST request to finish submission
+    resolvePost({
+      ok: true,
+      status: 201,
+      json: async () => "Rating saved",
+    } as Response);
+
+    // Wait until it is no longer submitting
+    await waitFor(() => {
+      const submitBtnAfter = screen.getByRole("button", {
+        name: /Submit Rating/i,
+      });
+      expect(submitBtnAfter).not.toHaveTextContent("Submitting...");
+    });
+  });
+
   test("successfully submits rating and note, and re-fetches to load the next song", async () => {
     let callCount = 0;
     vi.mocked(fetch).mockImplementation(async (url, init) => {

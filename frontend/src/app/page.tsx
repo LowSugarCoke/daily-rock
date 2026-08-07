@@ -33,6 +33,7 @@ export default function Home() {
         if (res.status === 404) {
           setNoSong(true);
           setLoading(false);
+          setSubmitSuccess(false); // Reset success state when no song is found
           return null;
         }
         if (!res.ok) {
@@ -50,6 +51,7 @@ export default function Home() {
       .catch((err) => {
         setError(err instanceof Error ? err.message : String(err));
         setLoading(false);
+        setSubmitSuccess(false); // Reset success state on error
       });
   }, [fetchTrigger]);
 
@@ -215,6 +217,7 @@ export default function Home() {
                     placeholder="Add private notes about this song (optional)..."
                     rows={3}
                     disabled={submitting}
+                    maxLength={1024}
                   />
 
                   {validationError && (
