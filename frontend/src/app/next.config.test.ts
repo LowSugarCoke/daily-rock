@@ -1,5 +1,15 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 
+async function getRewrites(): Promise<
+  { source: string; destination: string }[]
+> {
+  // Dynamically import to pick up the stubbed environment variable on load
+  const config = (await import("../../next.config")).default;
+  return (await (typeof config.rewrites === "function"
+    ? config.rewrites()
+    : [])) as unknown as { source: string; destination: string }[];
+}
+
 describe("Next.js Rewrites Config", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -11,11 +21,7 @@ describe("Next.js Rewrites Config", () => {
 
   test("uses localhost fallback when BACKEND_URL is not set", async () => {
     vi.stubEnv("BACKEND_URL", "");
-    // Dynamically import to pick up the stubbed environment variable on load
-    const config = (await import("../../next.config")).default;
-    const rewrites = (await (typeof config.rewrites === "function"
-      ? config.rewrites()
-      : [])) as unknown as { source: string; destination: string }[];
+    const rewrites = await getRewrites();
 
     expect(rewrites).toEqual([
       {
@@ -27,11 +33,7 @@ describe("Next.js Rewrites Config", () => {
 
   test("uses custom BACKEND_URL when set", async () => {
     vi.stubEnv("BACKEND_URL", "https://api.rock-rock.com");
-    // Dynamically import to pick up the stubbed environment variable on load
-    const config = (await import("../../next.config")).default;
-    const rewrites = (await (typeof config.rewrites === "function"
-      ? config.rewrites()
-      : [])) as unknown as { source: string; destination: string }[];
+    const rewrites = await getRewrites();
 
     expect(rewrites).toEqual([
       {
@@ -43,11 +45,7 @@ describe("Next.js Rewrites Config", () => {
 
   test("removes trailing slash from BACKEND_URL defensively", async () => {
     vi.stubEnv("BACKEND_URL", "https://api.rock-rock.com/");
-    // Dynamically import to pick up the stubbed environment variable on load
-    const config = (await import("../../next.config")).default;
-    const rewrites = (await (typeof config.rewrites === "function"
-      ? config.rewrites()
-      : [])) as unknown as { source: string; destination: string }[];
+    const rewrites = await getRewrites();
 
     expect(rewrites).toEqual([
       {
