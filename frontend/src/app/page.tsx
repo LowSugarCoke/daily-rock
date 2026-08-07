@@ -18,12 +18,22 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [noSong, setNoSong] = useState<boolean>(false);
 
+  // Rating and progression states
+  const [rating, setRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [note, setNote] = useState<string>("");
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [fetchTrigger, setFetchTrigger] = useState<number>(0);
+
   useEffect(() => {
     fetch("/api/daily_selection")
       .then((res) => {
         if (res.status === 404) {
           setNoSong(true);
           setLoading(false);
+          setSubmitSuccess(false); // Reset success state when no song is found
           return null;
         }
         if (!res.ok) {
@@ -35,13 +45,71 @@ export default function Home() {
         if (data) {
           setSong(data);
           setLoading(false);
+          setSubmitSuccess(false); // Clear success state once new song is fetched
         }
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : String(err));
         setLoading(false);
+        setSubmitSuccess(false); // Reset success state on error
       });
-  }, []);
+  }, [fetchTrigger]);
+
+  const handleSubmitRating = async () => {
+    if (!song) return;
+
+    if (rating === null || rating < 1 || rating > 5) {
+      setValidationError("Please select a rating of 1 to 5 stars.");
+      return;
+    }
+
+    setSubmitting(true);
+    setValidationError(null);
+
+    try {
+      const response = await fetch("/api/ratings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          daily_selection_id: song.id,
+          rating,
+          note: note.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errData =
+          (await (
+            typeof response.clone === "function" ? response.clone() : response
+          )
+            .json()
+            .catch(() => null)) || (await response.text().catch(() => null));
+        const errMsg =
+          typeof errData === "string"
+            ? errData
+            : errData
+              ? JSON.stringify(errData)
+              : response.statusText;
+        throw new Error(errMsg);
+      }
+
+      setSubmitSuccess(true);
+      setSong(null); // Clear the rated song state immediately to prevent regression/residual UI
+      setRating(null);
+      setNote("");
+      setHoverRating(null);
+      setLoading(true);
+      setError(null);
+      setNoSong(false);
+      setFetchTrigger((prev) => prev + 1);
+    } catch (err) {
+      setValidationError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -57,10 +125,17 @@ export default function Home() {
           </p>
 
           <div className={styles.selectionSection}>
-            {loading && (
+            {loading && !submitSuccess && (
               <div className={styles.statusBox}>
                 <span className={styles.spinner}></span>
                 {"Loading today's selection..."}
+              </div>
+            )}
+
+            {submitSuccess && (
+              <div className={`${styles.statusBox} ${styles.success}`}>
+                <span className={styles.spinner}></span>
+                <span>Success! Loading next selection...</span>
               </div>
             )}
 
@@ -96,7 +171,7 @@ export default function Home() {
               </div>
             )}
 
-            {song && (
+            {song && !loading && (
               <div className={styles.songCard}>
                 <div className={styles.cardHeader}>
                   <span className={styles.cardBadge}>
@@ -117,6 +192,59 @@ export default function Home() {
                 <div className={styles.mediaPlaceholder}>
                   <span className={styles.playIcon}>▶</span>
                   <span>YouTube Player Placeholder (Issue #7)</span>
+                </div>
+
+                <div className={styles.ratingSection}>
+                  <h3 className={styles.ratingTitle}>Rate this Song</h3>
+
+                  <div className={styles.starContainer}>
+                    {[1, 2, 3, 4, 5].map((starValue) => {
+                      const isFilled =
+                        hoverRating !== null
+                          ? starValue <= hoverRating
+                          : starValue <= (rating || 0);
+                      return (
+                        <button
+                          key={starValue}
+                          type="button"
+                          className={`${styles.starButton} ${isFilled ? styles.filled : ""}`}
+                          onClick={() => {
+                            setRating(starValue);
+                            setValidationError(null);
+                          }}
+                          onMouseEnter={() => setHoverRating(starValue)}
+                          onMouseLeave={() => setHoverRating(null)}
+                          aria-label={`Rate ${starValue} star${starValue > 1 ? "s" : ""}`}
+                          disabled={submitting}
+                        >
+                          ★
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <textarea
+                    className={styles.noteInput}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Add private notes about this song (optional)..."
+                    rows={3}
+                    disabled={submitting}
+                    maxLength={1024}
+                  />
+
+                  {validationError && (
+                    <p className={styles.validationError}>{validationError}</p>
+                  )}
+
+                  <button
+                    type="button"
+                    className={styles.submitButton}
+                    onClick={handleSubmitRating}
+                    disabled={submitting}
+                  >
+                    {submitting ? "Submitting..." : "Submit Rating"}
+                  </button>
                 </div>
               </div>
             )}

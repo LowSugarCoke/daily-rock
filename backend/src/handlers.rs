@@ -53,8 +53,30 @@ pub async fn submit_rating(
     State(state): State<crate::AppState>,
     Json(payload): Json<CreateRatingRequest>,
 ) -> impl IntoResponse {
+    if payload.daily_selection_id.len() > 64 {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json("Daily selection ID is too long"),
+        )
+            .into_response();
+    }
+
     if payload.rating < 1 || payload.rating > 5 {
-        return (StatusCode::BAD_REQUEST, Json("Rating must be between 1 and 5")).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Json("Rating must be between 1 and 5"),
+        )
+            .into_response();
+    }
+
+    if let Some(ref note) = payload.note {
+        if note.chars().count() > 1024 {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json("Note must be 1024 characters or less"),
+            )
+                .into_response();
+        }
     }
 
     // Generate a simple in-memory rating id
