@@ -64,6 +64,23 @@ jobs:
       - name: Run build
         run: npm run build
 
+      - name: Setup Rust toolchain (for E2E backend)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.0
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo dependencies (for E2E backend)
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend -> target
+
+      - name: Install Playwright Chromium Browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
   backend-ci:
     name: Backend CI
     needs: changes
