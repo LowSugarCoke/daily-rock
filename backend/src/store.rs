@@ -94,32 +94,26 @@ impl Default for InMemorySongStore {
 
 impl SongStore for InMemorySongStore {
     fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>> {
-        // TODO: Update this method so that it only returns the first song that hasn't been rated yet.
-        //
-        // Hints:
-        // 1. Lock the mutex: `self.ratings.lock().unwrap()` (C++ analogy: std::lock_guard).
-        // 2. Map rated ratings to their `daily_selection_id` strings: `.iter().map(|r| r.daily_selection_id.clone()).collect::<Vec<String>>()`
-        //    (C++ analogy: transforming a collection using lambda [] (auto& r) { return r.daily_selection_id; })
-        // 3. Find the first song whose `id` is not in the rated IDs: `self.songs.iter().find(|s| !rated_ids.contains(&s.id)).cloned()`
-        //    (C++ analogy: std::find_if)
         Box::pin(SendFuture::new(async move {
-            // STUB: Always returns the first song without considering ratings
-            self.songs.first().cloned()
+            let rated_ids: Vec<String> = self
+                .ratings
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|r| r.daily_selection_id.clone())
+                .collect();
+            self.songs
+                .iter()
+                .find(|s| !rated_ids.contains(&s.id))
+                .cloned()
         }))
     }
 
     fn save_rating(&self, rating: Rating) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>> {
-        // TODO: Implement rating storage with "Upsert" logic in memory.
-        // If a rating for the same `daily_selection_id` already exists, overwrite it.
-        //
-        // Hints:
-        // 1. Lock your mutex: `let mut ratings = self.ratings.lock().unwrap();`
-        // 2. Remove existing rating with same selection ID: `ratings.retain(|r| r.daily_selection_id != rating.daily_selection_id)`
-        //    (C++ analogy: `std::remove_if` or `erase-remove` idiom)
-        // 3. Push the new rating: `ratings.push(rating);`
-        // 4. Return success: `Ok(())`
         Box::pin(SendFuture::new(async move {
-            // STUB: Do nothing and return Ok
+            let mut ratings = self.ratings.lock().unwrap();
+            ratings.retain(|r| r.daily_selection_id != rating.daily_selection_id);
+            ratings.push(rating);
             Ok(())
         }))
     }
@@ -146,17 +140,12 @@ impl D1SongStore {
 
     // A helper method that performs the D1 database query and deserializes the fields.
     async fn fetch_daily_selection(&self) -> Option<Song> {
-        // TODO: Update this SQL statement to perform a LEFT JOIN with the `ratings` table,
-        // and filter using `WHERE r.id IS NULL` to ensure we only get songs that have not been rated yet.
-        //
-        // Query pattern:
-        // "SELECT s.id, s.title, s.artist, s.era, s.genre_tags, s.youtube_id \
-        //  FROM songs s \
-        //  LEFT JOIN ratings r ON s.id = r.daily_selection_id \
-        //  WHERE r.id IS NULL \
-        //  ORDER BY s.id ASC LIMIT 1"
         let statement = self.db.prepare(
-            "SELECT s.id, s.title, s.artist, s.era, s.genre_tags, s.youtube_id FROM songs s ORDER BY s.id ASC LIMIT 1"
+            "SELECT s.id, s.title, s.artist, s.era, s.genre_tags, s.youtube_id \
+             FROM songs s \
+             LEFT JOIN ratings r ON s.id = r.daily_selection_id \
+             WHERE r.id IS NULL \
+             ORDER BY s.id ASC LIMIT 1"
         );
         let d1_song = statement.first::<D1Song>(None).await.ok()??;
         let genre_tags: Vec<String> = serde_json::from_str(&d1_song.genre_tags).unwrap_or_default();
@@ -179,19 +168,18 @@ impl SongStore for D1SongStore {
     }
 
     fn save_rating(&self, rating: Rating) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>> {
-        // TODO: Implement the SQL Upsert (INSERT ON CONFLICT) statement for SQLite.
-        // SQL Syntax:
-        // "INSERT INTO ratings (id, daily_selection_id, rating, note) VALUES (?1, ?2, ?3, ?4) \
-        //  ON CONFLICT(daily_selection_id) DO UPDATE SET rating=?3, note=?4, timestamp=CURRENT_TIMESTAMP"
-        //
-        // Hints:
-        // 1. Prepare statement: `let statement = self.db.prepare("...");`
-        // 2. Bind parameters: `let statement = statement.bind(&[rating.id.into(), rating.daily_selection_id.into(), rating.rating.into(), rating.note.into()])?;`
-        //    (The `?` operator is a Rust idiom that returns the error immediately if a call fails, similar to throwing an exception).
-        // 3. Execute statement: `statement.run().await?;`
-        // 4. Return success: `Ok(())`
         Box::pin(SendFuture::new(async move {
-            // STUB: Do nothing and return Ok
+            let statement = self.db.prepare(
+                "INSERT INTO ratings (id, daily_selection_id, rating, note) VALUES (?1, ?2, ?3, ?4) \
+                 ON CONFLICT(daily_selection_id) DO UPDATE SET rating=?3, note=?4, timestamp=CURRENT_TIMESTAMP"
+            );
+            let statement = statement.bind(&[
+                rating.id.into(),
+                rating.daily_selection_id.into(),
+                rating.rating.into(),
+                rating.note.into(),
+            ])?;
+            statement.run().await?;
             Ok(())
         }))
     }

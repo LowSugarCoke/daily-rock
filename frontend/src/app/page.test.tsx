@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import Home from "./page";
 
@@ -9,6 +9,15 @@ const mockSong = {
   era: "1950s",
   genre_tags: ["Rock 'n' Roll"],
   youtube_id: "T38v3-SSGcM",
+};
+
+const mockNextSong = {
+  id: "2",
+  title: "Whole Lotta Love",
+  artist: "Led Zeppelin",
+  era: "1960s",
+  genre_tags: ["Hard Rock", "Classic Rock"],
+  youtube_id: "HQmmM_vIi4I",
 };
 
 describe("Home Component", () => {
@@ -97,5 +106,137 @@ describe("Home Component", () => {
       screen.getByText(/Failed to load today's selection/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/HTTP error! status: 500/i)).toBeInTheDocument();
+  });
+
+  test("renders rating form when a song is successfully loaded", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Loading today's selection...")
+      ).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Rate this Song")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(
+        "Add private notes about this song (optional)..."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Submit Rating/i })
+    ).toBeInTheDocument();
+
+    // Check for 5 star buttons
+    for (let i = 1; i <= 5; i++) {
+      expect(
+        screen.getByLabelText(`Rate ${i} star${i > 1 ? "s" : ""}`)
+      ).toBeInTheDocument();
+    }
+  });
+
+  test("validation displays error when submitting without a rating", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Loading today's selection...")
+      ).not.toBeInTheDocument();
+    });
+
+    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    fireEvent.click(submitBtn);
+
+    expect(
+      screen.getByText("Please select a rating of 1 to 5 stars.")
+    ).toBeInTheDocument();
+  });
+
+  test("successfully submits rating and note, and re-fetches to load the next song", async () => {
+    let callCount = 0;
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      const urlStr = typeof url === "string" ? url : (url as Request).url || "";
+      if (urlStr.includes("/api/ratings") && init?.method === "POST") {
+        const body = JSON.parse(init.body as string);
+        expect(body.daily_selection_id).toBe("1");
+        expect(body.rating).toBe(5);
+        expect(body.note).toBe("Incredible guitar solo!");
+        return {
+          ok: true,
+          status: 201,
+          json: async () => "Rating saved",
+        } as Response;
+      }
+      if (urlStr.includes("/api/daily_selection")) {
+        callCount++;
+        const returnedSong = callCount === 1 ? mockSong : mockNextSong;
+        return {
+          ok: true,
+          status: 200,
+          json: async () => returnedSong,
+        } as Response;
+      }
+      return { ok: false, status: 404 } as Response;
+    });
+
+    render(<Home />);
+
+    // 1. Initial song loading
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Loading today's selection...")
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Johnny B. Goode")).toBeInTheDocument();
+
+    // 2. Click 5 stars
+    const star5 = screen.getByLabelText("Rate 5 stars");
+    fireEvent.click(star5);
+
+    // 3. Type note
+    const noteTextarea = screen.getByPlaceholderText(
+      "Add private notes about this song (optional)..."
+    );
+    fireEvent.change(noteTextarea, {
+      target: { value: "Incredible guitar solo!" },
+    });
+
+    // 4. Submit
+    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    fireEvent.click(submitBtn);
+
+    // 5. Verification of success message and transition to next song
+    await waitFor(() => {
+      expect(
+        screen.getByText("Success! Loading next selection...")
+      ).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Led Zeppelin")).toBeInTheDocument();
+    expect(screen.getByText("1960s")).toBeInTheDocument();
+    expect(screen.getByText("Hard Rock")).toBeInTheDocument();
+    expect(screen.getByText("Classic Rock")).toBeInTheDocument();
+    expect(screen.queryByText("Johnny B. Goode")).not.toBeInTheDocument();
+
+    // The rating form and note field should be cleared on the newly mounted element
+    const noteTextareaAfter = screen.getByPlaceholderText(
+      "Add private notes about this song (optional)..."
+    );
+    expect(noteTextareaAfter).toHaveValue("");
   });
 });
