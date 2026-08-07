@@ -98,7 +98,7 @@ impl Default for InMemorySongStore {
 impl SongStore for InMemorySongStore {
     fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>> {
         Box::pin(SendFuture::new(async move {
-            let rated_ids: Vec<String> = self
+            let rated_ids: std::collections::HashSet<String> = self
                 .ratings
                 .lock()
                 .unwrap()

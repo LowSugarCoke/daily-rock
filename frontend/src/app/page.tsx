@@ -81,8 +81,11 @@ export default function Home() {
 
       if (!response.ok) {
         const errData =
-          (await response.json().catch(() => null)) ||
-          (await response.text().catch(() => null));
+          (await (
+            typeof response.clone === "function" ? response.clone() : response
+          )
+            .json()
+            .catch(() => null)) || (await response.text().catch(() => null));
         const errMsg =
           typeof errData === "string"
             ? errData

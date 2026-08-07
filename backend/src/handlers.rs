@@ -53,6 +53,14 @@ pub async fn submit_rating(
     State(state): State<crate::AppState>,
     Json(payload): Json<CreateRatingRequest>,
 ) -> impl IntoResponse {
+    if payload.daily_selection_id.len() > 64 {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json("Daily selection ID is too long"),
+        )
+            .into_response();
+    }
+
     if payload.rating < 1 || payload.rating > 5 {
         return (
             StatusCode::BAD_REQUEST,

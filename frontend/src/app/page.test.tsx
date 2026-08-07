@@ -351,4 +351,66 @@ describe("Home Component", () => {
     );
     expect(noteTextareaAfter).toHaveValue("");
   });
+
+  test("successfully submits rating and note, and handles 404 (no more songs) gracefully", async () => {
+    let callCount = 0;
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      const urlStr = typeof url === "string" ? url : (url as Request).url || "";
+      if (urlStr.includes("/api/ratings") && init?.method === "POST") {
+        return {
+          ok: true,
+          status: 201,
+          json: async () => "Rating saved",
+        } as Response;
+      }
+      if (urlStr.includes("/api/daily_selection")) {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => mockSong,
+          } as Response;
+        } else {
+          return {
+            ok: false,
+            status: 404,
+            json: async () => "No song found",
+          } as Response;
+        }
+      }
+      return { ok: false, status: 404 } as Response;
+    });
+
+    render(<Home />);
+
+    // 1. Initial song loading
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Loading today's selection...")
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Johnny B. Goode")).toBeInTheDocument();
+
+    // 2. Click 5 stars and submit
+    const star5 = screen.getByLabelText("Rate 5 stars");
+    fireEvent.click(star5);
+
+    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    fireEvent.click(submitBtn);
+
+    // 3. Verification of "no song" view after success
+    await waitFor(() => {
+      expect(
+        screen.getByText("No daily selection available")
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText("There are no songs loaded in the database yet.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Johnny B. Goode")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Success! Loading next selection...")
+    ).not.toBeInTheDocument();
+  });
 });

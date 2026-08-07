@@ -207,4 +207,19 @@ mod tests {
         let response_fail = server.post("/api/ratings").json(&rating_payload_fail).await;
         response_fail.assert_status(axum::http::StatusCode::BAD_REQUEST);
     }
+
+    #[tokio::test]
+    async fn test_submit_rating_invalid_id_length() {
+        let app = app();
+        let server = TestServer::new(app);
+
+        // Submit a rating with a daily_selection_id that exceeds 64 characters
+        let rating_payload = handlers::CreateRatingRequest {
+            daily_selection_id: "a".repeat(65),
+            rating: 5,
+            note: None,
+        };
+        let response = server.post("/api/ratings").json(&rating_payload).await;
+        response.assert_status(axum::http::StatusCode::BAD_REQUEST);
+    }
 }
