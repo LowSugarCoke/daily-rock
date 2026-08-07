@@ -189,13 +189,22 @@ mod tests {
         let app = app();
         let server = TestServer::new(app);
 
-        // Submit a rating with a note that exceeds 1024 characters
-        let rating_payload = handlers::CreateRatingRequest {
+        // Submit a rating with a note of 1024 Chinese characters (should be ACCEPTED, chars count <= 1024)
+        let rating_payload_ok = handlers::CreateRatingRequest {
             daily_selection_id: "1".to_string(),
             rating: 5,
-            note: Some("a".repeat(1025)),
+            note: Some("樂".repeat(1024)),
         };
-        let response = server.post("/api/ratings").json(&rating_payload).await;
-        response.assert_status(axum::http::StatusCode::BAD_REQUEST);
+        let response_ok = server.post("/api/ratings").json(&rating_payload_ok).await;
+        response_ok.assert_status(axum::http::StatusCode::CREATED);
+
+        // Submit a rating with a note of 1025 Chinese characters (should be BLOCKED, chars count > 1024)
+        let rating_payload_fail = handlers::CreateRatingRequest {
+            daily_selection_id: "2".to_string(),
+            rating: 5,
+            note: Some("樂".repeat(1025)),
+        };
+        let response_fail = server.post("/api/ratings").json(&rating_payload_fail).await;
+        response_fail.assert_status(axum::http::StatusCode::BAD_REQUEST);
     }
 }

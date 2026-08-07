@@ -164,6 +164,49 @@ describe("Home Component", () => {
     ).toBeInTheDocument();
   });
 
+  test("displays backend error message on failed submission", async () => {
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      const urlStr = typeof url === "string" ? url : (url as Request).url || "";
+      if (urlStr.includes("/api/ratings") && init?.method === "POST") {
+        return {
+          ok: false,
+          status: 400,
+          json: async () => "Note must be 1024 characters or less",
+        } as Response;
+      }
+      if (urlStr.includes("/api/daily_selection")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockSong,
+        } as Response;
+      }
+      return { ok: false, status: 404 } as Response;
+    });
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Loading today's selection...")
+      ).not.toBeInTheDocument();
+    });
+
+    // Select 4 stars and submit
+    const star4 = screen.getByLabelText("Rate 4 stars");
+    fireEvent.click(star4);
+
+    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    fireEvent.click(submitBtn);
+
+    // Verify error is displayed on screen
+    await waitFor(() => {
+      expect(
+        screen.getByText("Note must be 1024 characters or less")
+      ).toBeInTheDocument();
+    });
+  });
+
   test("disables form elements and shows submitting status on submission", async () => {
     let resolvePost: (
       value: Response | PromiseLike<Response>

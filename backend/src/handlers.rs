@@ -62,7 +62,7 @@ pub async fn submit_rating(
     }
 
     if let Some(ref note) = payload.note {
-        if note.len() > 1024 {
+        if note.chars().count() > 1024 {
             return (
                 StatusCode::BAD_REQUEST,
                 Json("Note must be 1024 characters or less"),

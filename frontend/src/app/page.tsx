@@ -80,10 +80,20 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to submit rating: ${response.statusText}`);
+        const errData =
+          (await response.json().catch(() => null)) ||
+          (await response.text().catch(() => null));
+        const errMsg =
+          typeof errData === "string"
+            ? errData
+            : errData
+              ? JSON.stringify(errData)
+              : response.statusText;
+        throw new Error(errMsg);
       }
 
       setSubmitSuccess(true);
+      setSong(null); // Clear the rated song state immediately to prevent regression/residual UI
       setRating(null);
       setNote("");
       setHoverRating(null);
