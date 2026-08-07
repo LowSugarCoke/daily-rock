@@ -1,4 +1,7 @@
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use std::sync::Arc;
 use tower_service::Service;
 use worker::*;
@@ -22,6 +25,7 @@ pub fn app_with_store(store: Arc<dyn store::SongStore + Send + Sync>) -> Router 
             "/api/daily_selection",
             get(handlers::get_current_daily_selection),
         )
+        .route("/api/ratings", post(handlers::submit_rating))
         .with_state(state)
 }
 
@@ -114,7 +118,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_current_daily_selection_not_found() {
-        let empty_store = Arc::new(store::InMemorySongStore { songs: vec![] });
+        let empty_store = Arc::new(store::InMemorySongStore {
+            songs: vec![],
+            ratings: std::sync::Mutex::new(Vec::new()),
+        });
         let app = app_with_store(empty_store);
         let server = TestServer::new(app);
 
@@ -123,5 +130,57 @@ mod tests {
 
         let body: String = response.json();
         assert_eq!(body, "No song found");
+    }
+
+    #[tokio::test]
+    async fn test_submit_rating_success() {
+        let app = app();
+        let server = TestServer::new(app);
+
+        // Initially get current song
+        let response = server.get("/api/daily_selection").await;
+        response.assert_status_ok();
+        let current_song: store::Song = response.json();
+        assert_eq!(current_song.id, "1");
+
+        // Submit a rating
+        let rating_payload = handlers::CreateRatingRequest {
+            daily_selection_id: "1".to_string(),
+            rating: 5,
+            note: Some("Brilliant track!".to_string()),
+        };
+        let response = server.post("/api/ratings").json(&rating_payload).await;
+        response.assert_status(axum::http::StatusCode::CREATED);
+
+        // Get current song again - should be "2" (gated progress progression)
+        let response = server.get("/api/daily_selection").await;
+        response.assert_status_ok();
+        let current_song_after: store::Song = response.json();
+        assert_eq!(current_song_after.id, "2");
+        assert_eq!(current_song_after.title, "Whole Lotta Love");
+    }
+
+    #[tokio::test]
+    async fn test_submit_rating_invalid_rating() {
+        let app = app();
+        let server = TestServer::new(app);
+
+        // Submit an invalid rating (0)
+        let rating_payload = handlers::CreateRatingRequest {
+            daily_selection_id: "1".to_string(),
+            rating: 0,
+            note: None,
+        };
+        let response = server.post("/api/ratings").json(&rating_payload).await;
+        response.assert_status(axum::http::StatusCode::BAD_REQUEST);
+
+        // Submit an invalid rating (6)
+        let rating_payload2 = handlers::CreateRatingRequest {
+            daily_selection_id: "1".to_string(),
+            rating: 6,
+            note: None,
+        };
+        let response = server.post("/api/ratings").json(&rating_payload2).await;
+        response.assert_status(axum::http::StatusCode::BAD_REQUEST);
     }
 }
