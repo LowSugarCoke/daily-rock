@@ -54,7 +54,11 @@ pub async fn submit_rating(
     Json(payload): Json<CreateRatingRequest>,
 ) -> impl IntoResponse {
     if payload.rating < 1 || payload.rating > 5 {
-        return (StatusCode::BAD_REQUEST, Json("Rating must be between 1 and 5")).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Json("Rating must be between 1 and 5"),
+        )
+            .into_response();
     }
 
     // Generate a simple in-memory rating id

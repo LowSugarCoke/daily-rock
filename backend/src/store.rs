@@ -38,7 +38,10 @@ pub trait SongStore {
     // TODO: Add `save_rating` method to the trait.
     // It should accept a `rating` of type `Rating` and return a boxed Future yielding `worker::Result<()>`.
     // Signature pattern matches `get_daily_selection`, but returns `worker::Result<()>` instead of `Option<Song>`.
-    fn save_rating(&self, rating: Rating) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>>;
+    fn save_rating(
+        &self,
+        rating: Rating,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>>;
 }
 
 pub struct InMemorySongStore {
@@ -109,7 +112,10 @@ impl SongStore for InMemorySongStore {
         }))
     }
 
-    fn save_rating(&self, rating: Rating) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>> {
+    fn save_rating(
+        &self,
+        rating: Rating,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>> {
         Box::pin(SendFuture::new(async move {
             let mut ratings = self.ratings.lock().unwrap();
             ratings.retain(|r| r.daily_selection_id != rating.daily_selection_id);
@@ -145,7 +151,7 @@ impl D1SongStore {
              FROM songs s \
              LEFT JOIN ratings r ON s.id = r.daily_selection_id \
              WHERE r.id IS NULL \
-             ORDER BY s.id ASC LIMIT 1"
+             ORDER BY s.id ASC LIMIT 1",
         );
         let d1_song = statement.first::<D1Song>(None).await.ok()??;
         let genre_tags: Vec<String> = serde_json::from_str(&d1_song.genre_tags).unwrap_or_default();
@@ -167,7 +173,10 @@ impl SongStore for D1SongStore {
         }))
     }
 
-    fn save_rating(&self, rating: Rating) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>> {
+    fn save_rating(
+        &self,
+        rating: Rating,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>> {
         Box::pin(SendFuture::new(async move {
             let statement = self.db.prepare(
                 "INSERT INTO ratings (id, daily_selection_id, rating, note) VALUES (?1, ?2, ?3, ?4) \
@@ -202,7 +211,7 @@ mod tests {
     #[tokio::test]
     async fn test_in_memory_song_store_gating_progression() {
         let store = InMemorySongStore::new();
-        
+
         // Initially, first song is "1"
         let song1 = store.get_daily_selection().await.unwrap();
         assert_eq!(song1.id, "1");
