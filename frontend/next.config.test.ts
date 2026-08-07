@@ -4,7 +4,7 @@ async function getRewrites(): Promise<
   { source: string; destination: string }[]
 > {
   // Dynamically import to pick up the stubbed environment variable on load
-  const config = (await import("../../next.config")).default;
+  const config = (await import("./next.config")).default;
   return (await (typeof config.rewrites === "function"
     ? config.rewrites()
     : [])) as unknown as { source: string; destination: string }[];
