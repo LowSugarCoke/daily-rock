@@ -1,32 +1,17 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Daily Rock Home Page", () => {
-  test("successfully loads and renders the daily selection", async ({
+  test("successfully loads and renders the daily selection from the real backend integration", async ({
     page,
   }) => {
-    // Intercept API call and mock a successful response to make test hermetic and database-independent
-    await page.route("**/api/daily_selection", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          id: "1",
-          title: "Johnny B. Goode",
-          artist: "Chuck Berry",
-          era: "1950s",
-          genre_tags: ["Rock 'n' Roll"],
-          youtube_id: "T38v3-SSGcM",
-        }),
-      });
-    });
-
+    // Navigate directly to the home page (No mocking! Real E2E integration with seeded backend SQLite)
     await page.goto("/");
 
     // Verify page title and header
     await expect(page).toHaveTitle("Daily Rock");
     await expect(page.locator("h1")).toHaveText("Daily Rock");
 
-    // Verify the daily selection song details are rendered
+    // Verify the daily selection song details are rendered (e.g. Johnny B. Goode from seed data)
     const songCard = page.locator("[class*='songCard']");
     await expect(songCard).toBeVisible();
 
@@ -47,6 +32,48 @@ test.describe("Daily Rock Home Page", () => {
     await expect(
       page.locator("textarea[placeholder*='Add private notes']")
     ).toBeVisible();
+  });
+
+  test("renders loading state while API fetch is in flight", async ({
+    page,
+  }) => {
+    let resolveRoute: () => void = () => {};
+    const delayPromise = new Promise<void>((resolve) => {
+      resolveRoute = resolve;
+    });
+
+    // Intercept API call with an artificial delay
+    await page.route("**/api/daily_selection", async (route) => {
+      await delayPromise;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "1",
+          title: "Johnny B. Goode",
+          artist: "Chuck Berry",
+          era: "1950s",
+          genre_tags: ["Rock 'n' Roll"],
+          youtube_id: "T38v3-SSGcM",
+        }),
+      });
+    });
+
+    // Navigate to homepage without waiting for full load completion
+    await page.goto("/", { waitUntil: "commit" });
+
+    // Assert that the loading spinner/indicator is visible on screen
+    const loadingBox = page.locator("[class*='statusBox']", {
+      hasText: "Loading today",
+    });
+    await expect(loadingBox).toBeVisible();
+
+    // Resolve the delayed API call
+    resolveRoute();
+
+    // Verify loading state disappears and song card completes loading
+    await expect(loadingBox).not.toBeVisible();
+    await expect(page.locator("[class*='songCard']")).toBeVisible();
   });
 
   test("renders 'No daily selection available' when API returns 404", async ({
