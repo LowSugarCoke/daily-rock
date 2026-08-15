@@ -36,8 +36,7 @@ export default defineConfig({
   /* Run local dev servers before starting the tests */
   webServer: [
     {
-      command: "npx wrangler dev",
-      cwd: "../backend",
+      command: "npx wrangler dev --cwd ../backend",
       port: 8787,
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
