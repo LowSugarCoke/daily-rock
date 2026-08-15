@@ -75,6 +75,17 @@ jobs:
         with:
           workspaces: backend -> target
 
+      - name: Install cargo-binstall and worker-build (for E2E backend)
+        run: |
+          mkdir -p ~/.cargo/bin
+          curl -LfqS https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | tar -xz -C ~/.cargo/bin
+          cargo binstall -y worker-build
+
+      - name: Pre-compile backend worker (for E2E backend)
+        run: |
+          cd ../backend
+          worker-build --release
+
       - name: Install Playwright Chromium Browser
         run: npx playwright install --with-deps chromium
 
@@ -114,7 +125,11 @@ jobs:
       - name: Run tests
         run: cargo test
 
-      - name: Install worker-build and build
+      - name: Install cargo-binstall and worker-build
         run: |
-          cargo install worker-build
-          worker-build --release
+          mkdir -p ~/.cargo/bin
+          curl -LfqS https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | tar -xz -C ~/.cargo/bin
+          cargo binstall -y worker-build
+
+      - name: Build backend worker
+        run: worker-build --release
