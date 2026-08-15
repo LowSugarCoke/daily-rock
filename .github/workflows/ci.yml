@@ -67,7 +67,7 @@ jobs:
       - name: Setup Rust toolchain (for E2E backend)
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.96.0
+          toolchain: stable
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo dependencies (for E2E backend)
@@ -75,11 +75,8 @@ jobs:
         with:
           workspaces: backend -> target
 
-      - name: Install cargo-binstall and worker-build (for E2E backend)
-        run: |
-          mkdir -p ~/.cargo/bin
-          curl -LfqS https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | tar -xz -C ~/.cargo/bin
-          cargo binstall -y worker-build
+      - name: Setup worker-build (for E2E backend)
+        uses: ./.github/actions/setup-worker-build
 
       - name: Pre-compile backend worker (for E2E backend)
         run: |
@@ -110,7 +107,7 @@ jobs:
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.96.0
+          toolchain: stable
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
 
@@ -128,11 +125,8 @@ jobs:
       - name: Run tests
         run: cargo test
 
-      - name: Install cargo-binstall and worker-build
-        run: |
-          mkdir -p ~/.cargo/bin
-          curl -LfqS https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | tar -xz -C ~/.cargo/bin
-          cargo binstall -y worker-build
+      - name: Setup worker-build
+        uses: ./.github/actions/setup-worker-build
 
       - name: Build backend worker
         run: worker-build --release
