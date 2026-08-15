@@ -1,0 +1,12 @@
+name: "Setup worker-build"
+description: "Installs cargo-binstall and worker-build CLI for compiling Rust Cloudflare Workers"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install cargo-binstall and worker-build
+      shell: bash
+      run: |
+        mkdir -p ~/.cargo/bin
+        curl -LfqS https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | tar -xz -C ~/.cargo/bin
+        cargo binstall -y worker-build

@@ -64,6 +64,34 @@ jobs:
       - name: Run build
         run: npm run build
 
+      - name: Setup Rust toolchain (for E2E backend)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.0
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo dependencies (for E2E backend)
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend -> target
+
+      - name: Setup worker-build (for E2E backend)
+        uses: ./.github/actions/setup-worker-build
+
+      - name: Pre-compile backend worker (for E2E backend)
+        run: |
+          cd ../backend
+          worker-build --release
+
+      - name: Apply D1 migrations locally (for E2E backend)
+        run: npx wrangler d1 migrations apply DB --local --cwd ../backend
+
+      - name: Install Playwright Chromium Browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
   backend-ci:
     name: Backend CI
     needs: changes
@@ -97,7 +125,8 @@ jobs:
       - name: Run tests
         run: cargo test
 
-      - name: Install worker-build and build
-        run: |
-          cargo install worker-build
-          worker-build --release
+      - name: Setup worker-build
+        uses: ./.github/actions/setup-worker-build
+
+      - name: Build backend worker
+        run: worker-build --release
