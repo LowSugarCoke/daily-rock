@@ -92,7 +92,7 @@ pub async fn submit_rating(
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default()
-                    .as_secs()
+                    .as_nanos()
             )
         }
     };
@@ -107,6 +107,16 @@ pub async fn submit_rating(
 
     match state.song_store.save_rating(rating).await {
         Ok(_) => (StatusCode::CREATED, Json("Rating saved")).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
+    }
+}
+
+pub async fn get_listening_history(
+    State(state): State<crate::AppState>,
+    Query(query): Query<crate::store::HistoryQuery>,
+) -> impl IntoResponse {
+    match state.song_store.get_history(query).await {
+        Ok(history) => Json(history).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
     }
 }

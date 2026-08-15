@@ -32,6 +32,27 @@ pub struct Rating {
     pub timestamp: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct HistoryItem {
+    pub rating_id: String,
+    pub song_id: String,
+    pub title: String,
+    pub artist: String,
+    pub era: String,
+    pub genre_tags: Vec<String>,
+    pub youtube_id: String,
+    pub rating: u8,
+    pub note: Option<String>,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct HistoryQuery {
+    pub era: Option<String>,
+    pub artist: Option<String>,
+    pub genre: Option<String>,
+}
+
 pub trait SongStore {
     fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>>;
 
@@ -42,6 +63,11 @@ pub trait SongStore {
         &self,
         rating: Rating,
     ) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>>;
+
+    fn get_history(
+        &self,
+        query: HistoryQuery,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<Vec<HistoryItem>>> + Send + '_>>;
 }
 
 pub struct InMemorySongStore {
@@ -123,6 +149,51 @@ impl SongStore for InMemorySongStore {
             Ok(())
         }))
     }
+
+    fn get_history(
+        &self,
+        query: HistoryQuery,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<Vec<HistoryItem>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            let ratings = self.ratings.lock().unwrap();
+            let mut items = Vec::new();
+            for r in ratings.iter() {
+                if let Some(song) = self.songs.iter().find(|s| s.id == r.daily_selection_id) {
+                    if let Some(ref era_filter) = query.era {
+                        if song.era != *era_filter {
+                            continue;
+                        }
+                    }
+                    if let Some(ref artist_filter) = query.artist {
+                        if !song.artist.eq_ignore_ascii_case(artist_filter) {
+                            continue;
+                        }
+                    }
+                    if let Some(ref genre_filter) = query.genre {
+                        if !song.genre_tags.iter().any(|g| g.eq_ignore_ascii_case(genre_filter)) {
+                            continue;
+                        }
+                    }
+
+                    items.push(HistoryItem {
+                        rating_id: r.id.clone(),
+                        song_id: song.id.clone(),
+                        title: song.title.clone(),
+                        artist: song.artist.clone(),
+                        era: song.era.clone(),
+                        genre_tags: song.genre_tags.clone(),
+                        youtube_id: song.youtube_id.clone(),
+                        rating: r.rating,
+                        note: r.note.clone(),
+                        timestamp: r.timestamp.clone().unwrap_or_else(|| "2026-08-15 00:00:00".to_string()),
+                    });
+                }
+            }
+            // Sort by rating_id DESC (showing newest listens first)
+            items.sort_by(|a, b| b.rating_id.cmp(&a.rating_id));
+            Ok(items)
+        }))
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -133,6 +204,20 @@ pub struct D1Song {
     pub era: String,
     pub genre_tags: String, // Stored as a JSON-serialized array in SQLite/D1
     pub youtube_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct D1HistoryItem {
+    pub rating_id: String,
+    pub song_id: String,
+    pub title: String,
+    pub artist: String,
+    pub era: String,
+    pub genre_tags: String, // stored as JSON array string
+    pub youtube_id: String,
+    pub rating: u8,
+    pub note: Option<String>,
+    pub timestamp: String,
 }
 
 pub struct D1SongStore {
@@ -190,6 +275,29 @@ impl SongStore for D1SongStore {
             ])?;
             statement.run().await?;
             Ok(())
+        }))
+    }
+
+    fn get_history(
+        &self,
+        _query: HistoryQuery,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<Vec<HistoryItem>>> + Send + '_>> {
+        // TODO: Implement history retrieval from D1 Database.
+        //
+        // Acceptable criteria / Steps:
+        // 1. Construct the base SQL query joining `ratings` and `songs` on `daily_selection_id = s.id`.
+        //    Select fields: r.id, r.daily_selection_id, s.title, s.artist, s.era, s.genre_tags, s.youtube_id, r.rating, r.note, r.timestamp
+        // 2. Build a vector of conditions (e.g. `s.era = ?`) and `worker::wasm_bindgen::JsValue` binds based on `query` filters.
+        //    Hint: For `query.genre`, use `s.genre_tags LIKE ?` and format `%"genre"%`.
+        //    Hint: In Rust, you can use `worker::wasm_bindgen::JsValue::from("value")` to convert to serializable JS values.
+        // 3. Append the WHERE clause (if conditions is not empty) and order by `r.timestamp DESC, r.id DESC`.
+        // 4. Prepare the statement and bind parameters if there are any parameters to bind.
+        // 5. Call `statement.all().await?` to get a `D1Result`, then deserialize using `result.results::<D1HistoryItem>()?`.
+        // 6. Map the vector of `D1HistoryItem` elements to `HistoryItem` (including deserializing JSON array `genre_tags` using `serde_json::from_str`).
+        //    Hint: Use `unwrap_or_default()` when handling deserialization fallbacks.
+        Box::pin(SendFuture::new(async move {
+            // Stub return
+            Ok(Vec::new())
         }))
     }
 }

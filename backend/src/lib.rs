@@ -26,6 +26,7 @@ pub fn app_with_store(store: Arc<dyn store::SongStore + Send + Sync>) -> Router 
             get(handlers::get_current_daily_selection),
         )
         .route("/api/ratings", post(handlers::submit_rating))
+        .route("/api/history", get(handlers::get_listening_history))
         .with_state(state)
 }
 
@@ -221,5 +222,60 @@ mod tests {
         };
         let response = server.post("/api/ratings").json(&rating_payload).await;
         response.assert_status(axum::http::StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_get_listening_history_success_and_filtering() {
+        let app = app();
+        let server = TestServer::new(app);
+
+        // Submit ratings for song 1 (Johnny B. Goode) and song 2 (Whole Lotta Love)
+        let rating1 = handlers::CreateRatingRequest {
+            daily_selection_id: "1".to_string(),
+            rating: 5,
+            note: Some("Johnny B. Goode was amazing!".to_string()),
+        };
+        server.post("/api/ratings").json(&rating1).await.assert_status(axum::http::StatusCode::CREATED);
+
+        let rating2 = handlers::CreateRatingRequest {
+            daily_selection_id: "2".to_string(),
+            rating: 4,
+            note: Some("Whole Lotta Love was great!".to_string()),
+        };
+        server.post("/api/ratings").json(&rating2).await.assert_status(axum::http::StatusCode::CREATED);
+
+        // Get full listening history
+        let response = server.get("/api/history").await;
+        response.assert_status_ok();
+        let history: Vec<store::HistoryItem> = response.json();
+        assert_eq!(history.len(), 2);
+        // Sorted newest first (Whole Lotta Love is song 2, Johnny B. Goode is song 1)
+        assert_eq!(history[0].song_id, "2");
+        assert_eq!(history[0].rating, 4);
+        assert_eq!(history[0].note.as_deref(), Some("Whole Lotta Love was great!"));
+        assert_eq!(history[1].song_id, "1");
+        assert_eq!(history[1].rating, 5);
+        assert_eq!(history[1].note.as_deref(), Some("Johnny B. Goode was amazing!"));
+
+        // Filter by era
+        let response_era = server.get("/api/history").add_query_param("era", "1950s").await;
+        response_era.assert_status_ok();
+        let history_era: Vec<store::HistoryItem> = response_era.json();
+        assert_eq!(history_era.len(), 1);
+        assert_eq!(history_era[0].song_id, "1");
+
+        // Filter by artist
+        let response_artist = server.get("/api/history").add_query_param("artist", "Led Zeppelin").await;
+        response_artist.assert_status_ok();
+        let history_artist: Vec<store::HistoryItem> = response_artist.json();
+        assert_eq!(history_artist.len(), 1);
+        assert_eq!(history_artist[0].song_id, "2");
+
+        // Filter by genre
+        let response_genre = server.get("/api/history").add_query_param("genre", "Hard Rock").await;
+        response_genre.assert_status_ok();
+        let history_genre: Vec<store::HistoryItem> = response_genre.json();
+        assert_eq!(history_genre.len(), 1);
+        assert_eq!(history_genre[0].song_id, "2");
     }
 }
