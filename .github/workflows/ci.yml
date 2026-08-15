@@ -67,7 +67,7 @@ jobs:
       - name: Setup Rust toolchain (for E2E backend)
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: 1.96.0
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo dependencies (for E2E backend)
@@ -107,7 +107,7 @@ jobs:
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: 1.96.0
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
 
