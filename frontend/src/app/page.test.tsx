@@ -29,13 +29,13 @@ describe("Home Component", () => {
     vi.unstubAllGlobals();
   });
 
-  test("renders initial loading state and brand info", () => {
+  test("renders initial loading state and today's eyebrow", () => {
     // Mock fetch to return a pending promise to stay in loading state
     vi.mocked(fetch).mockReturnValue(new Promise(() => {}));
 
     render(<Home />);
 
-    expect(screen.getByText("Daily Rock")).toBeInTheDocument();
+    expect(screen.getByText("Today's Selection")).toBeInTheDocument();
     expect(
       screen.getByText("Loading today's selection...")
     ).toBeInTheDocument();

@@ -2,15 +2,9 @@
 
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
+import type { Song } from "@/lib/types";
 
-export interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  era: string;
-  genre_tags: string[];
-  youtube_id: string;
-}
+const STAR_CAPTIONS = ["Skip", "Meh", "Good", "Great", "Classic"];
 
 export default function Home() {
   const [song, setSong] = useState<Song | null>(null);
@@ -111,101 +105,99 @@ export default function Home() {
     }
   };
 
+  const displayRating = hoverRating ?? rating ?? 0;
+  const todayLabel = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <div className={styles.intro}>
-          <div className={styles.brand}>
-            <span className={styles.rockEmoji}>🎸</span>
-            <h1 className={styles.title}>Daily Rock</h1>
-          </div>
-          <p className={styles.tagline}>
-            Systematically listening to rock music, one song a day. Tracking
-            history, ratings, and classic rock evolution.
-          </p>
+        <div className={styles.heroRow}>
+          <span className={styles.eyebrow}>Today&apos;s Selection</span>
+          <span className={styles.dayLabel}>{todayLabel}</span>
+        </div>
 
-          <div className={styles.selectionSection}>
-            {loading && !submitSuccess && (
-              <div className={styles.statusBox}>
-                <span className={styles.spinner}></span>
-                {"Loading today's selection..."}
+        <div className={styles.selectionSection}>
+          {loading && !submitSuccess && (
+            <div className={styles.statusBox}>
+              <span className={styles.spinner}></span>
+              {"Loading today's selection..."}
+            </div>
+          )}
+
+          {submitSuccess && (
+            <div className={`${styles.statusBox} ${styles.success}`}>
+              <span className={styles.spinner}></span>
+              <span>Success! Loading next selection...</span>
+            </div>
+          )}
+
+          {error && (
+            <div className={`${styles.statusBox} ${styles.error}`}>
+              <span
+                className={styles.statusDot}
+                style={{ backgroundColor: "#ff4d4f" }}
+              ></span>
+              <div className={styles.errorContent}>
+                <h3 className={styles.errorTitle}>
+                  {"Failed to load today's selection"}
+                </h3>
+                <p className={styles.errorMessage}>{error}</p>
               </div>
-            )}
+            </div>
+          )}
 
-            {submitSuccess && (
-              <div className={`${styles.statusBox} ${styles.success}`}>
-                <span className={styles.spinner}></span>
-                <span>Success! Loading next selection...</span>
+          {noSong && (
+            <div className={`${styles.statusBox} ${styles.warning}`}>
+              <span
+                className={styles.statusDot}
+                style={{ backgroundColor: "#faad14" }}
+              ></span>
+              <div className={styles.warningContent}>
+                <h3 className={styles.warningTitle}>
+                  No daily selection available
+                </h3>
+                <p className={styles.warningMessage}>
+                  There are no songs loaded in the database yet.
+                </p>
               </div>
-            )}
+            </div>
+          )}
 
-            {error && (
-              <div className={`${styles.statusBox} ${styles.error}`}>
-                <span
-                  className={styles.statusDot}
-                  style={{ backgroundColor: "#ff4d4f" }}
-                ></span>
-                <div className={styles.errorContent}>
-                  <h3 className={styles.errorTitle}>
-                    {"Failed to load today's selection"}
-                  </h3>
-                  <p className={styles.errorMessage}>{error}</p>
-                </div>
-              </div>
-            )}
-
-            {noSong && (
-              <div className={`${styles.statusBox} ${styles.warning}`}>
-                <span
-                  className={styles.statusDot}
-                  style={{ backgroundColor: "#faad14" }}
-                ></span>
-                <div className={styles.warningContent}>
-                  <h3 className={styles.warningTitle}>
-                    No daily selection available
-                  </h3>
-                  <p className={styles.warningMessage}>
-                    There are no songs loaded in the database yet.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {song && !loading && (
-              <div className={styles.songCard}>
-                <div className={styles.cardHeader}>
-                  <span className={styles.cardBadge}>
-                    {"Today's Selection"}
+          {song && !loading && (
+            <div className={styles.songCard}>
+              <div className={styles.tagsRow}>
+                <span className={styles.eraTag}>{song.era}</span>
+                {song.genre_tags.map((tag) => (
+                  <span key={tag} className={styles.genreTag}>
+                    {tag}
                   </span>
-                  <span className={styles.eraTag}>{song.era}</span>
-                </div>
-                <h2 className={styles.songTitle}>{song.title}</h2>
-                <p className={styles.songArtist}>{song.artist}</p>
-                <div className={styles.genreTags}>
-                  {song.genre_tags.map((tag) => (
-                    <span key={tag} className={styles.genreTag}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                ))}
+              </div>
+              <h2 className={styles.songTitle}>{song.title}</h2>
+              <p className={styles.songArtist}>{song.artist}</p>
 
-                <div className={styles.mediaPlaceholder}>
-                  <span className={styles.playIcon}>▶</span>
-                  <span>YouTube Player Placeholder (Issue #7)</span>
-                </div>
+              <div className={styles.mediaPlaceholder}>
+                <span className={styles.playIcon}>▶</span>
+              </div>
 
-                <div className={styles.ratingSection}>
+              <div className={styles.ratingSection}>
+                <div className={styles.ratingHead}>
                   <h3 className={styles.ratingTitle}>Rate this Song</h3>
+                  <span className={styles.ratingHint}>
+                    {rating ? `${rating} / 5 selected` : "Select a rating"}
+                  </span>
+                </div>
 
-                  <div className={styles.starContainer}>
-                    {[1, 2, 3, 4, 5].map((starValue) => {
-                      const isFilled =
-                        hoverRating !== null
-                          ? starValue <= hoverRating
-                          : starValue <= (rating || 0);
-                      return (
+                <div className={styles.starContainer}>
+                  {[1, 2, 3, 4, 5].map((starValue) => {
+                    const isFilled = starValue <= displayRating;
+                    return (
+                      <div key={starValue} className={styles.starWrap}>
                         <button
-                          key={starValue}
                           type="button"
                           className={`${styles.starButton} ${isFilled ? styles.filled : ""}`}
                           onClick={() => {
@@ -219,10 +211,17 @@ export default function Home() {
                         >
                           ★
                         </button>
-                      );
-                    })}
-                  </div>
+                        <span
+                          className={`${styles.starCaption} ${isFilled ? styles.starCaptionOn : ""}`}
+                        >
+                          {STAR_CAPTIONS[starValue - 1]}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
 
+                <div className={styles.noteWrap}>
                   <textarea
                     className={styles.noteInput}
                     value={note}
@@ -232,42 +231,24 @@ export default function Home() {
                     disabled={submitting}
                     maxLength={1024}
                   />
-
-                  {validationError && (
-                    <p className={styles.validationError}>{validationError}</p>
-                  )}
-
-                  <button
-                    type="button"
-                    className={styles.submitButton}
-                    onClick={handleSubmitRating}
-                    disabled={submitting}
-                  >
-                    {submitting ? "Submitting..." : "Submit Rating"}
-                  </button>
+                  <span className={styles.noteCount}>{note.length} / 1024</span>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://github.com/LowSugarCoke/daily-rock"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub Repo
-          </a>
-          <a
-            className={styles.secondary}
-            href="/api/daily_selection"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Direct API Check
-          </a>
+                {validationError && (
+                  <p className={styles.validationError}>{validationError}</p>
+                )}
+
+                <button
+                  type="button"
+                  className={styles.submitButton}
+                  onClick={handleSubmitRating}
+                  disabled={submitting}
+                >
+                  {submitting ? "Submitting..." : "Submit Rating →"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
