@@ -98,7 +98,11 @@ impl SongStore for InMemorySongStore {
                         }
                     }
                     if let Some(ref genre_filter) = query.genre {
-                        if !song.genre_tags.iter().any(|g| g.eq_ignore_ascii_case(genre_filter)) {
+                        if !song
+                            .genre_tags
+                            .iter()
+                            .any(|g| g.eq_ignore_ascii_case(genre_filter))
+                        {
                             continue;
                         }
                     }
@@ -113,7 +117,10 @@ impl SongStore for InMemorySongStore {
                         youtube_id: song.youtube_id.clone(),
                         rating: r.rating,
                         note: r.note.clone(),
-                        timestamp: r.timestamp.clone().unwrap_or_else(|| "2026-08-15 00:00:00".to_string()),
+                        timestamp: r
+                            .timestamp
+                            .clone()
+                            .unwrap_or_else(|| "2026-08-15 00:00:00".to_string()),
                     });
                 }
             }

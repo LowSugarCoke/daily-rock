@@ -109,7 +109,10 @@ impl SongStore for D1SongStore {
             }
             if let Some(ref genre) = query.genre {
                 conditions.push("s.genre_tags LIKE ?".to_string());
-                binds.push(worker::wasm_bindgen::JsValue::from(format!("%\"{}\"%", genre)));
+                binds.push(worker::wasm_bindgen::JsValue::from(format!(
+                    "%\"{}\"%",
+                    genre
+                )));
             }
 
             if !conditions.is_empty() {
@@ -131,7 +134,8 @@ impl SongStore for D1SongStore {
 
             let mut items = Vec::new();
             for item in d1_items {
-                let genre_tags: Vec<String> = serde_json::from_str(&item.genre_tags).unwrap_or_default();
+                let genre_tags: Vec<String> =
+                    serde_json::from_str(&item.genre_tags).unwrap_or_default();
                 items.push(HistoryItem {
                     rating_id: item.rating_id,
                     song_id: item.song_id,
