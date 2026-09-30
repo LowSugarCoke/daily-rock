@@ -2,10 +2,10 @@
   color-scheme: light;
 
   /* Set per song from its album cover (see app/page.tsx). */
-  --cover: #fbfaf8;
-  --bg: color-mix(in oklab, var(--cover) 16%, #fbfaf8);
+  --cover: #f7f3ec;
+  --bg: color-mix(in oklab, var(--cover) 16%, #f7f3ec);
   --surface: color-mix(in oklab, var(--bg) 55%, #ffffff);
-  --line: color-mix(in oklab, var(--cover) 22%, #d9d6d0);
+  --line: color-mix(in oklab, var(--cover) 22%, #d8d1c4);
   --text: #141414;
   --text-2: #4d4b47;
   --text-3: #66635e;

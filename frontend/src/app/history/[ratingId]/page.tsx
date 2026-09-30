@@ -59,7 +59,9 @@ export default function HistoryEntryPage() {
           </p>
         )}
         {state.status === "missing" && (
-          <p className={styles.status}>This song isn&apos;t in your history.</p>
+          <p className={styles.missing}>
+            This song isn&apos;t in your history.
+          </p>
         )}
 
         {item && (

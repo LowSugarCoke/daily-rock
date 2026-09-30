@@ -14,9 +14,26 @@ import { ratingWord } from "@/lib/rating";
 import { PenCircle } from "@/components/Diary";
 
 const ALL = "";
+const GENRES_SHOWN = 12;
 
-function distinctSorted(values: string[]): string[] {
-  return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
+// Genres ordered by how often you've heard them, so the ones you know best
+// come first; ties sort by name.
+function genresByCount(
+  items: HistoryItem[]
+): { name: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const tag of items.flatMap((i) => i.genre_tags)) {
+    counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+  return Array.from(counts, ([name, count]) => ({ name, count })).sort(
+    (a, b) => b.count - a.count || a.name.localeCompare(b.name)
+  );
+}
+
+function matchesSearch(item: HistoryItem, query: string): boolean {
+  return [item.title, item.artist, item.album, ...item.genre_tags].some(
+    (field) => field.toLowerCase().includes(query)
+  );
 }
 
 export default function HistoryPage() {
@@ -27,7 +44,7 @@ export default function HistoryPage() {
   const [search, setSearch] = useState<string>("");
   const [era, setEra] = useState<string>(ALL);
   const [genre, setGenre] = useState<string>(ALL);
-  const [artist, setArtist] = useState<string>(ALL);
+  const [showAllGenres, setShowAllGenres] = useState<boolean>(false);
 
   useEffect(() => {
     fetch("/api/history")
@@ -48,40 +65,33 @@ export default function HistoryPage() {
   }, []);
 
   const eraOptions = useMemo(
-    () => distinctSorted(items.map((i) => i.era)),
+    () => Array.from(new Set(items.map((i) => i.era))).sort(),
     [items]
   );
-  const genreOptions = useMemo(
-    () => distinctSorted(items.flatMap((i) => i.genre_tags)),
-    [items]
-  );
-  const artistOptions = useMemo(
-    () => distinctSorted(items.map((i) => i.artist)),
-    [items]
-  );
+  const genreOptions = useMemo(() => genresByCount(items), [items]);
+  const visibleGenres =
+    showAllGenres || genreOptions.length <= GENRES_SHOWN
+      ? genreOptions
+      : genreOptions.filter(
+          (g, index) => index < GENRES_SHOWN || g.name === genre
+        );
+  const hiddenGenreCount = genreOptions.length - visibleGenres.length;
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return items.filter((item) => {
-      if (era && item.era !== era) return false;
-      if (artist && item.artist !== artist) return false;
-      if (genre && !item.genre_tags.includes(genre)) return false;
-      if (
-        query &&
-        !item.title.toLowerCase().includes(query) &&
-        !item.artist.toLowerCase().includes(query)
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [items, search, era, artist, genre]);
+    return items.filter(
+      (item) =>
+        (!era || item.era === era) &&
+        (!genre || item.genre_tags.includes(genre)) &&
+        (!query || matchesSearch(item, query))
+    );
+  }, [items, search, era, genre]);
 
   const songsLogged = items.length;
   const averageRating = computeAverageRating(items);
   const currentStreak = computeCurrentStreak(items);
 
-  const hasActiveFilters = Boolean(search || era || genre || artist);
+  const hasActiveFilters = Boolean(search || era || genre);
 
   return (
     <div className={styles.page}>
@@ -89,7 +99,8 @@ export default function HistoryPage() {
         <div className={styles.head}>
           <h2 className={styles.heading}>Listening History</h2>
           <p className={styles.subheading}>
-            Every song you&apos;ve rated, filterable by era, artist, and genre.
+            Every song you&apos;ve rated. Pick an era or a genre to narrow it
+            down.
           </p>
         </div>
 
@@ -128,85 +139,94 @@ export default function HistoryPage() {
               </div>
             </dl>
 
-            <div className={styles.filterBar}>
-              <label className={styles.searchWrap}>
-                <span className={styles.filterFieldLabel}>Search</span>
+            <div className={styles.filters}>
+              <label className={styles.search}>
+                <span className={styles.filterName}>Search</span>
                 <input
                   type="search"
-                  className={styles.filterSearch}
-                  placeholder="Search title or artist…"
+                  className={styles.searchInput}
+                  placeholder="Title, artist, album or genre"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </label>
 
-              <label className={styles.filterField}>
-                <span className={styles.filterFieldLabel}>Era</span>
-                <select
-                  className={styles.filterSelect}
-                  value={era}
-                  onChange={(e) => setEra(e.target.value)}
-                >
-                  <option value={ALL}>All</option>
-                  {eraOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className={styles.filterRow} role="group" aria-label="Era">
+                <span className={styles.filterName}>Era</span>
+                <div className={styles.eras}>
+                  {[ALL, ...eraOptions].map((option) => {
+                    const isOn = era === option;
+                    return (
+                      <button
+                        key={option || "all"}
+                        type="button"
+                        className={`${styles.era} ${isOn ? styles.eraOn : ""}`}
+                        aria-pressed={isOn}
+                        aria-label={option || "All eras"}
+                        onClick={() => setEra(option)}
+                      >
+                        {option || "All"}
+                        {isOn && <PenCircle />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-              <label className={styles.filterField}>
-                <span className={styles.filterFieldLabel}>Genre</span>
-                <select
-                  className={styles.filterSelect}
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                >
-                  <option value={ALL}>All</option>
-                  {genreOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className={styles.filterField}>
-                <span className={styles.filterFieldLabel}>Artist</span>
-                <select
-                  className={styles.filterSelect}
-                  value={artist}
-                  onChange={(e) => setArtist(e.target.value)}
-                >
-                  <option value={ALL}>All</option>
-                  {artistOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className={styles.filterRow} role="group" aria-label="Genre">
+                <span className={styles.filterName}>Genre</span>
+                <div className={styles.genres}>
+                  {visibleGenres.map(({ name, count }) => {
+                    const isOn = genre === name;
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        className={`${styles.genre} ${isOn ? styles.genreOn : ""}`}
+                        aria-pressed={isOn}
+                        aria-label={name}
+                        onClick={() => setGenre(isOn ? ALL : name)}
+                      >
+                        {name}
+                        <span className={styles.genreCount} aria-hidden="true">
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {hiddenGenreCount > 0 && (
+                    <button
+                      type="button"
+                      className={styles.moreGenres}
+                      onClick={() => setShowAllGenres(true)}
+                    >
+                      {`+${hiddenGenreCount} more`}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {hasActiveFilters && (
-              <button
-                type="button"
-                className={styles.clearFilters}
-                onClick={() => {
-                  setSearch("");
-                  setEra(ALL);
-                  setGenre(ALL);
-                  setArtist(ALL);
-                }}
-              >
-                Clear filters
-              </button>
-            )}
+            <p className={styles.resultLine}>
+              {`${filteredItems.length} of ${items.length} songs`}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className={styles.clearFilters}
+                  onClick={() => {
+                    setSearch("");
+                    setEra(ALL);
+                    setGenre(ALL);
+                  }}
+                >
+                  Clear filters
+                </button>
+              )}
+            </p>
 
             {filteredItems.length === 0 ? (
               <div className={styles.emptyState}>
-                No results for the current filters. Clear a filter to see more.
+                No results. Try another genre, or clear the filters.
               </div>
             ) : (
               <ol className={styles.list}>
@@ -234,6 +254,9 @@ export default function HistoryPage() {
                         <span className={styles.artist}>{item.artist}</span>
                         <span className={styles.album}>
                           {`${item.album}, ${item.year}`}
+                        </span>
+                        <span className={styles.cardGenres}>
+                          {item.genre_tags.join(", ")}
                         </span>
                         <span
                           className={styles.rating}

@@ -29,10 +29,7 @@
   align-items: center;
   gap: 12px;
   max-width: 560px;
-  padding: 16px;
-  border-radius: 10px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  padding: 12px 0;
   font-size: 15px;
   color: var(--text-2);
 }
