@@ -180,8 +180,15 @@ export default function Home() {
               <h2 className={styles.songTitle}>{song.title}</h2>
               <p className={styles.songArtist}>{song.artist}</p>
 
-              <div className={styles.mediaPlaceholder}>
-                <span className={styles.playIcon}>▶</span>
+              <div className={styles.player}>
+                <iframe
+                  className={styles.playerFrame}
+                  src={`https://www.youtube-nocookie.com/embed/${song.youtube_id}`}
+                  title={`${song.title} - ${song.artist}`}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
               </div>
 
               <div className={styles.ratingSection}>

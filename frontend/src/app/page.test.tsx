@@ -65,6 +65,24 @@ describe("Home Component", () => {
     expect(screen.getByText("Rock 'n' Roll")).toBeInTheDocument();
   });
 
+  test("embeds a YouTube player for the current song", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    const player = await screen.findByTitle("Johnny B. Goode - Chuck Berry");
+    expect(player.tagName).toBe("IFRAME");
+    expect(player).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/T38v3-SSGcM"
+    );
+    expect(player).toHaveAttribute("allowfullscreen");
+  });
+
   test("renders empty/no-song state when backend returns 404", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
