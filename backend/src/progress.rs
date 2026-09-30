@@ -33,6 +33,10 @@ mod tests {
             era: era.to_string(),
             genre_tags: vec![],
             youtube_id: "xxxxxxxxxxx".to_string(),
+            album: "Album".to_string(),
+            year: 1970,
+            cover_url: String::new(),
+            cover_color: "#000000".to_string(),
         }
     }
 
