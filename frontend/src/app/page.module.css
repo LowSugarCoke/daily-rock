@@ -116,26 +116,67 @@
   color: var(--danger);
 }
 
+/* A strip of masking tape with the label written on it by hand */
 .submitButton {
-  min-height: 48px;
-  margin-top: 26px;
-  padding: 0 28px;
+  align-self: flex-start;
+  min-height: 56px;
+  margin-top: 28px;
+  padding: 6px 34px 8px;
   border: none;
-  border-radius: 10px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
+  background: color-mix(in oklab, var(--tape) 70%, var(--accent) 22%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  font-family: var(--font-hand);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  /* Darker than the accent so the ink stays readable on light tape. */
+  color: color-mix(in oklab, var(--accent) 72%, #000);
   cursor: pointer;
-  transition: opacity 120ms ease;
+  transform: rotate(-2deg);
+  /* Torn ends on both sides */
+  clip-path: polygon(
+    0 6%,
+    3% 0,
+    6% 8%,
+    10% 1%,
+    100% 0,
+    97% 10%,
+    100% 22%,
+    97% 38%,
+    100% 55%,
+    97% 72%,
+    100% 88%,
+    97% 100%,
+    0 100%,
+    3% 86%,
+    0 70%,
+    3% 52%,
+    0 36%,
+    3% 20%
+  );
+  transition: transform 120ms ease;
 }
 
 .submitButton:not(:disabled):hover {
-  opacity: 0.85;
+  transform: rotate(0deg) translateY(-2px);
+}
+
+.submitButton:not(:disabled):active {
+  transform: rotate(0deg) scale(0.97);
+}
+
+/* clip-path would cut off an outline, so focus darkens the tape instead */
+.submitButton:focus-visible {
+  outline: none;
+  transform: rotate(0deg);
+  background: color-mix(in oklab, var(--tape) 45%, var(--accent) 40%);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
 }
 
 .submitButton:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

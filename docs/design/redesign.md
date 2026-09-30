@@ -16,6 +16,8 @@ The first cover-led version looked too tidy, so you picked the "listening diary"
 - The chosen rating is circled in pen, in the cover's accent colour.
 - Notes are handwritten (Caveat, the only extra font) on a ruled index card.
 - History is a scrapbook wall of taped covers. Each entry opens `/history/<ratingId>`, laid out like Today: play the song again, with your rating circled and your note on the card.
+- Today's save button is a strip of torn masking tape with "Save to diary" handwritten in the cover's colour (picked from `.lavish/submit-button-options.html`).
+- History puts the covers first (layout H1 from the same page): title, one-line stats, search and a Filter toggle share the header; era and genre open under it.
 - History filters: one underlined search line (matches title, artist, album and genre), eras circled in pen like the rating, and genres as masking-tape labels ordered by how often you've heard them (top 12, then "+N more"). Each card lists its genres.
 - Every page sits on the same warm paper (#f7f3ec); song pages add the cover tint on top. Loading and error messages are plain text; empty and not-found messages are handwritten.
 - Shared pieces: `SongSpread` (cover, player, stamp, credits), `RatingScale` and `NoteCard` in `components/Diary.tsx`, and `useCoverTheme` for the tint and accent.

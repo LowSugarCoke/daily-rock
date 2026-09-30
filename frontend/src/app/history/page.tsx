@@ -43,6 +43,7 @@ export default function HistoryPage() {
   const [search, setSearch] = useState<string>("");
   const [era, setEra] = useState<string>(ALL);
   const [genre, setGenre] = useState<string>(ALL);
+  const [filtersOpen, setFiltersOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetch("/api/history")
@@ -84,15 +85,46 @@ export default function HistoryPage() {
 
   const hasActiveFilters = Boolean(search || era || genre);
 
+  const summary = `${songsLogged} ${songsLogged === 1 ? "song" : "songs"} · avg ${averageRating} / 5 · ${currentStreak}-day streak`;
+  const activeFilterCount = (era ? 1 : 0) + (genre ? 1 : 0);
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
         <div className={styles.head}>
           <h2 className={styles.heading}>Listening History</h2>
-          <p className={styles.subheading}>
-            Every song you&apos;ve rated. Pick an era or a genre to narrow it
-            down.
-          </p>
+          {!loading && !error && <p className={styles.summary}>{summary}</p>}
+          {!loading && !error && (
+            <div className={styles.tools}>
+              <label className={styles.search}>
+                <span className={styles.visuallyHidden}>Search</span>
+                <input
+                  type="search"
+                  className={styles.searchInput}
+                  placeholder="Search title, artist, genre"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className={`${styles.filterToggle} ${filtersOpen ? styles.filterToggleOpen : ""}`}
+                aria-expanded={filtersOpen}
+                aria-controls="history-filters"
+                onClick={() => setFiltersOpen((open) => !open)}
+              >
+                <span className={styles.filterLabel}>Filter</span>
+                {activeFilterCount > 0 && (
+                  <span className={styles.filterCount}>
+                    {activeFilterCount}
+                  </span>
+                )}
+                <span className={styles.chevron} aria-hidden="true">
+                  {filtersOpen ? "▴" : "▾"}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
         {loading && (
@@ -110,39 +142,8 @@ export default function HistoryPage() {
 
         {!loading && !error && (
           <>
-            <dl className={styles.statRow}>
-              <div className={styles.statTile}>
-                <dt className={styles.statLabel}>Songs Logged</dt>
-                <dd className={styles.statValue}>{songsLogged}</dd>
-              </div>
-              <div className={styles.statTile}>
-                <dt className={styles.statLabel}>Average Rating</dt>
-                <dd className={styles.statValue}>
-                  {averageRating} <small>/ 5</small>
-                </dd>
-              </div>
-              <div className={styles.statTile}>
-                <dt className={styles.statLabel}>Current Streak</dt>
-                <dd className={styles.statValue}>
-                  {currentStreak}{" "}
-                  <small>{currentStreak === 1 ? "day" : "days"}</small>
-                </dd>
-              </div>
-            </dl>
-
-            <div className={styles.filters}>
-              <div className={styles.filterTop}>
-                <label className={styles.search}>
-                  <span className={styles.filterName}>Search</span>
-                  <input
-                    type="search"
-                    className={styles.searchInput}
-                    placeholder="Title, artist, album or genre"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </label>
-
+            {filtersOpen && (
+              <div className={styles.filters} id="history-filters">
                 <div className={styles.filterRow} role="group" aria-label="Era">
                   <span className={styles.filterName}>Era</span>
                   <div className={styles.eras}>
@@ -164,36 +165,43 @@ export default function HistoryPage() {
                     })}
                   </div>
                 </div>
-              </div>
 
-              <div className={styles.filterRow} role="group" aria-label="Genre">
-                <span className={styles.filterName}>Genre</span>
-                <div className={styles.genres}>
-                  {genreOptions.map(({ name, count }) => {
-                    const isOn = genre === name;
-                    return (
-                      <button
-                        key={name}
-                        type="button"
-                        className={`${styles.genre} ${isOn ? styles.genreOn : ""}`}
-                        aria-pressed={isOn}
-                        aria-label={name}
-                        onClick={() => setGenre(isOn ? ALL : name)}
-                      >
-                        {name}
-                        <span className={styles.genreCount} aria-hidden="true">
-                          {count}
-                        </span>
-                      </button>
-                    );
-                  })}
+                <div
+                  className={styles.filterRow}
+                  role="group"
+                  aria-label="Genre"
+                >
+                  <span className={styles.filterName}>Genre</span>
+                  <div className={styles.genres}>
+                    {genreOptions.map(({ name, count }) => {
+                      const isOn = genre === name;
+                      return (
+                        <button
+                          key={name}
+                          type="button"
+                          className={`${styles.genre} ${isOn ? styles.genreOn : ""}`}
+                          aria-pressed={isOn}
+                          aria-label={name}
+                          onClick={() => setGenre(isOn ? ALL : name)}
+                        >
+                          {name}
+                          <span
+                            className={styles.genreCount}
+                            aria-hidden="true"
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <p className={styles.resultLine}>
-              {`${filteredItems.length} of ${items.length} songs`}
-              {hasActiveFilters && (
+            {hasActiveFilters && (
+              <p className={styles.resultLine}>
+                {`${filteredItems.length} of ${items.length} songs`}
                 <button
                   type="button"
                   className={styles.clearFilters}
@@ -205,8 +213,8 @@ export default function HistoryPage() {
                 >
                   Clear filters
                 </button>
-              )}
-            </p>
+              </p>
+            )}
 
             {filteredItems.length === 0 ? (
               <div className={styles.emptyState}>

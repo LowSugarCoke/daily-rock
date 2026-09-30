@@ -39,21 +39,27 @@ describe("HistoryPage", () => {
     expect(screen.getByText("Johnny B. Goode")).toBeInTheDocument();
   });
 
-  test("renders computed stat tiles", async () => {
+  test("summarises the stats in one line", async () => {
     render(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText("Songs Logged")).toBeInTheDocument();
-    });
+    // (5 + 4 + 3) / 3 = 4, and the fixture has three days in a row.
+    expect(
+      await screen.findByText("3 songs · avg 4 / 5 · 3-day streak")
+    ).toBeInTheDocument();
+  });
 
-    const songsTile = screen.getByText("Songs Logged").parentElement!;
-    expect(within(songsTile).getByText("3")).toBeInTheDocument();
+  test("keeps era and genre behind the Filter toggle", async () => {
+    render(<HistoryPage />);
 
-    const avgTile = screen.getByText("Average Rating").parentElement!;
-    expect(within(avgTile).getByText("4")).toBeInTheDocument(); // (5+4+3)/3 = 4
+    const toggle = await screen.findByRole("button", { name: /filter/i });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("button", { name: "1950s" })
+    ).not.toBeInTheDocument();
 
-    const streakTile = screen.getByText("Current Streak").parentElement!;
-    expect(within(streakTile).getByText("3")).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "1950s" })).toBeInTheDocument();
   });
 
   test("filters the list by search text", async () => {
@@ -79,6 +85,7 @@ describe("HistoryPage", () => {
       expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
     });
 
+    fireEvent.click(screen.getByRole("button", { name: /filter/i }));
     const eraButton = screen.getByRole("button", { name: "1950s" });
     fireEvent.click(eraButton);
 
@@ -98,6 +105,7 @@ describe("HistoryPage", () => {
       expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
     });
 
+    fireEvent.click(screen.getByRole("button", { name: /filter/i }));
     const genre = screen.getByRole("button", { name: "Heavy Metal" });
     fireEvent.click(genre);
 

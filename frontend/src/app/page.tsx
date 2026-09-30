@@ -200,7 +200,7 @@ export default function Home() {
                 onClick={handleSubmitRating}
                 disabled={submitting}
               >
-                {submitting ? "Submitting..." : "Submit Rating"}
+                {submitting ? "Saving..." : "Save to diary →"}
               </button>
             </section>
           </SongSpread>

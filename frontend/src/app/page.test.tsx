@@ -205,7 +205,7 @@ describe("Home Component", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Submit Rating/i })
+      screen.getByRole("button", { name: /Save to diary/i })
     ).toBeInTheDocument();
 
     // Check for 5 star buttons
@@ -231,7 +231,7 @@ describe("Home Component", () => {
       ).not.toBeInTheDocument();
     });
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     expect(
@@ -271,7 +271,7 @@ describe("Home Component", () => {
     const star4 = screen.getByLabelText("Rate 4 stars");
     fireEvent.click(star4);
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     // Verify error is displayed on screen
@@ -317,12 +317,12 @@ describe("Home Component", () => {
     const star4 = screen.getByLabelText("Rate 4 stars");
     fireEvent.click(star4);
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     // Assert submitting state - elements should be disabled and button text should change
     expect(submitBtn).toBeDisabled();
-    expect(submitBtn).toHaveTextContent("Submitting...");
+    expect(submitBtn).toHaveTextContent("Saving...");
     expect(
       screen.getByPlaceholderText(
         "Add private notes about this song (optional)..."
@@ -345,9 +345,9 @@ describe("Home Component", () => {
     // Wait until it is no longer submitting
     await waitFor(() => {
       const submitBtnAfter = screen.getByRole("button", {
-        name: /Submit Rating/i,
+        name: /Save to diary/i,
       });
-      expect(submitBtnAfter).not.toHaveTextContent("Submitting...");
+      expect(submitBtnAfter).not.toHaveTextContent("Saving...");
     });
   });
 
@@ -401,7 +401,7 @@ describe("Home Component", () => {
     });
 
     // 4. Submit
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     // 5. Verification of success message and transition to next song
@@ -471,7 +471,7 @@ describe("Home Component", () => {
     const star5 = screen.getByLabelText("Rate 5 stars");
     fireEvent.click(star5);
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     // 3. Verification of "no song" view after success

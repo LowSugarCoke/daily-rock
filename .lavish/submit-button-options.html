@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Rock - 按鈕與 History 版面選項</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --hand: "Caveat", "Segoe Print", cursive;
+    --paper: #f7f3ec;
+    --text: #141414; --text-2: #4d4b47; --text-3: #66635e;
+    --pen: #2a3a6b; --tape: rgba(250, 244, 222, .72);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); color: var(--text); background: #ece8e0; line-height: 1.5; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+  h1 { font-size: 28px; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .lead { color: var(--text-2); max-width: 780px; margin-bottom: 28px; }
+
+  .colors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 36px; }
+  .colors div { background: #fff; border-radius: 10px; padding: 14px 16px; font-size: 14.5px; color: var(--text-2); }
+  .colors b { display: block; color: var(--text); font-size: 16px; margin-bottom: 4px; }
+  .swatches { display: flex; gap: 6px; margin-top: 8px; }
+  .swatches i { width: 26px; height: 26px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.1); }
+
+  .option { background: #fff; border-radius: 14px; padding: 20px; margin-bottom: 24px; }
+  .option-head { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 4px; }
+  .tag { font-weight: 700; font-size: 15px; background: #141414; color: #fff; border-radius: 6px; padding: 2px 10px; }
+  .option-head h2 { font-size: 21px; }
+  .option > p { color: var(--text-2); font-size: 15px; margin-bottom: 14px; }
+  .cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .cell { border-radius: 10px; padding: 18px 18px 22px; min-height: 170px; display: flex; flex-direction: column; gap: 14px; }
+  .cell .cap { font-size: 13px; color: var(--text-2); }
+  .rated { font-size: 15px; color: var(--text-2); }
+  .rated b { position: relative; color: var(--text); padding: 0 6px; }
+  .rated b svg { position: absolute; left: -6px; top: -6px; width: calc(100% + 12px); height: calc(100% + 12px); overflow: visible; }
+  .rated path { fill: none; stroke: var(--c); stroke-width: 2.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .strip { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ddd; font-size: 13px; color: var(--text-2); }
+  .strip .mini { border-radius: 8px; padding: 10px 12px; }
+  .pros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; font-size: 14px; color: var(--text-2); }
+  .pros b { color: var(--text); }
+
+  /* page tints per cover */
+  .zep { background: color-mix(in oklab, #b28470 16%, var(--paper)); }
+  .sun { background: color-mix(in oklab, #fbd004 16%, var(--paper)); }
+  .wee { background: color-mix(in oklab, #0092c5 16%, var(--paper)); }
+  .c-zep { --c: #8b6657; } .c-sun { --c: #8d7404; } .c-wee { --c: #007ba7; }
+  .c-ink { --c: #1a1a1a; } .c-red { --c: #b3261e; }
+
+  button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+  .btn { align-self: flex-start; }
+
+  /* 0: current */
+  .b0 { min-height: 48px; padding: 0 28px; border-radius: 10px; background: var(--c); color: #fff; font-weight: 600; font-size: 16px; }
+
+  /* A: rubber stamp */
+  .bA {
+    position: relative; min-height: 50px; padding: 0 22px;
+    border: 3px solid var(--c); border-radius: 6px; color: var(--c);
+    font-weight: 800; font-size: 17px; letter-spacing: .12em; text-transform: uppercase;
+    transform: rotate(-3deg); transition: transform 90ms ease, background-color 90ms ease, color 90ms ease;
+    background: repeating-linear-gradient(115deg, transparent 0 7px, color-mix(in oklab, var(--c) 7%, transparent) 7px 8px);
+  }
+  .bA:hover { transform: rotate(-3deg) scale(1.03); }
+  .bA:active { transform: rotate(-3deg) scale(.95); background: var(--c); color: #fff; }
+
+  /* B: concert ticket */
+  .bB {
+    --notch: radial-gradient(circle at 0 50%, transparent 9px, #000 9.5px) left / 51% 100% no-repeat,
+             radial-gradient(circle at 100% 50%, transparent 9px, #000 9.5px) right / 51% 100% no-repeat;
+    position: relative; display: inline-flex; align-items: stretch; min-height: 54px; background: var(--c); color: #fff;
+    -webkit-mask: var(--notch); mask: var(--notch); transition: transform 120ms ease;
+  }
+  .bB .main { display: flex; align-items: center; padding: 0 22px 0 26px; font-weight: 700; font-size: 16px; }
+  .bB .stub { display: flex; flex-direction: column; justify-content: center; padding: 0 22px 0 14px; border-left: 2px dashed rgba(255,255,255,.55); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; line-height: 1.3; opacity: .92; }
+  .bB .stub b { font-size: 15px; letter-spacing: .04em; }
+  .bB:hover { transform: translateY(-2px) rotate(-1deg); }
+  .bB:active { transform: translateY(0) scale(.98); }
+
+  /* C: masking-tape label */
+  .bC {
+    position: relative; min-height: 52px; padding: 4px 30px 6px;
+    background: color-mix(in oklab, var(--tape) 70%, var(--c) 22%);
+    font-family: var(--hand); font-size: 30px; font-weight: 700; line-height: 1; color: var(--c);
+    transform: rotate(-2deg); box-shadow: 0 2px 4px rgba(0,0,0,.12);
+    clip-path: polygon(0 6%, 3% 0, 6% 8%, 10% 1%, 100% 0, 97% 10%, 100% 22%, 97% 38%, 100% 55%, 97% 72%, 100% 88%, 97% 100%, 0 100%, 3% 86%, 0 70%, 3% 52%, 0 36%, 3% 20%);
+    transition: transform 120ms ease;
+  }
+  .bC:hover { transform: rotate(0deg) translateY(-2px); }
+  .bC:active { transform: rotate(0deg) scale(.97); }
+
+  /* D: record press */
+  .bD { display: inline-flex; align-items: center; gap: 14px; font-weight: 700; font-size: 16px; color: var(--text); }
+  .bD .disc {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; position: relative;
+    background:
+      radial-gradient(circle, #f7f3ec 0 2.5%, var(--c) 3% 30%, #111 31% 32%, transparent 32.5%),
+      repeating-radial-gradient(circle, #151515 0 2px, #222 2px 3px);
+    box-shadow: 0 4px 10px rgba(0,0,0,.3); transition: transform 600ms ease;
+  }
+  .bD:hover .disc { transform: rotate(200deg); }
+  .bD:active .disc { transform: rotate(200deg) scale(.94); }
+  .bD .arrow { color: var(--c); }
+
+  .decide { background: #fff; border-radius: 12px; padding: 22px 24px; margin-top: 32px; }
+  .decide h2 { font-size: 20px; margin-bottom: 10px; }
+  .decide fieldset { border: 0; margin-bottom: 14px; }
+  .decide legend { font-weight: 600; margin-bottom: 4px; }
+  .decide label { display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 16px; cursor: pointer; }
+  .decide textarea { width: 100%; min-height: 70px; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font: inherit; }
+  .decide .go { margin-top: 12px; background: #141414; color: #fff; border-radius: 8px; padding: 12px 22px; font-weight: 600; min-height: 44px; }
+
+
+  /* ---- History layout mockups ---- */
+  .part { font-size: 24px; margin: 56px 0 6px; letter-spacing: -0.02em; }
+  .hmock { background: var(--paper); border-radius: 12px; padding: 22px 26px 28px; border: 1px solid #ddd6ca; overflow: hidden; }
+  .hbar { display: flex; gap: 22px; align-items: center; font-size: 14px; margin-bottom: 18px; }
+  .hbar b { font-size: 15px; } .hbar span { color: var(--text-2); } .hbar .on { color: var(--text); font-weight: 600; }
+  .hbar .streak { margin-left: auto; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 26px 22px; }
+  .grid6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+  .card .tp { position: relative; transform: rotate(-2deg); margin-bottom: 10px; }
+  .card:nth-child(3n+2) .tp { transform: rotate(1.8deg); }
+  .card:nth-child(3n) .tp { transform: rotate(-0.8deg); }
+  .card .tp::after { content: ""; position: absolute; top: -7px; left: 30%; width: 40%; height: 15px; background: var(--tape); transform: rotate(-4deg); }
+  .card img, .wall img, .hero img { width: 100%; aspect-ratio: 1; display: block; box-shadow: 0 2px 4px rgba(0,0,0,.16), 0 12px 20px -12px rgba(0,0,0,.4); }
+  .card .t { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
+  .card .a { font-size: 12.5px; color: var(--text-2); }
+  .card .r { font-size: 12.5px; margin-top: 2px; }
+  .card .r b { border: 1.6px solid #333; border-radius: 50%; padding: 0 6px; font-weight: 600; }
+  .stampS { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; border: 1.6px solid #666; color: #555; border-radius: 3px; padding: 0 5px; transform: rotate(-5deg); margin-bottom: 5px; }
+  .h1head { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; }
+  .h1head h3 { font-size: 26px; letter-spacing: -0.02em; }
+  .h1head .meta { font-size: 13.5px; color: var(--text-2); }
+  .h1head .tool { margin-left: auto; font-size: 13.5px; display: flex; gap: 14px; align-items: center; }
+  .h1head .tool u { text-underline-offset: 3px; }
+  .h1head .tool .srch { border-bottom: 1.5px solid #999; width: 170px; color: var(--text-3); padding-bottom: 2px; }
+  .hero { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 30px; align-items: center; margin-bottom: 26px; }
+  .hero .tp { transform: rotate(-2.5deg); position: relative; }
+  .hero .tp::after { content: ""; position: absolute; top: -10px; left: 12%; width: 30%; height: 22px; background: var(--tape); transform: rotate(-7deg); }
+  .hero .lbl { font-size: 13px; color: var(--text-2); margin-bottom: 4px; }
+  .hero h3 { font-size: 34px; letter-spacing: -0.025em; line-height: 1.05; }
+  .hero .by { font-size: 17px; margin: 4px 0 8px; }
+  .hero .note { font-family: var(--hand); font-size: 24px; color: var(--pen); margin-top: 6px; }
+  .slim { display: flex; align-items: center; gap: 18px; font-size: 13.5px; color: var(--text-2); padding: 10px 0 14px; border-top: 1px solid #ddd3c2; margin-bottom: 14px; flex-wrap: wrap; }
+  .slim .srch { border-bottom: 1.5px solid #999; width: 180px; color: var(--text-3); }
+  .slim .era b { color: var(--text); border: 1.6px solid #333; border-radius: 50%; padding: 0 6px; }
+  .slim .tape { background: color-mix(in oklab, var(--tape) 100%, #d9ccaa 30%); color: var(--text); padding: 3px 8px; font-size: 12.5px; }
+  .wallhead { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .wallhead h3 { font-size: 22px; }
+  .wallhead .pill { margin-left: auto; font-size: 13.5px; border: 1.5px solid #333; border-radius: 999px; padding: 5px 14px; }
+  .wall { position: relative; }
+  .wall .ov { position: absolute; left: 6px; bottom: 6px; font-size: 9px; font-weight: 800; letter-spacing: .08em; background: rgba(250,246,236,.92); color: #333; padding: 1px 6px; border: 1.4px solid #555; border-radius: 3px; transform: rotate(-4deg); }
+  .wall.hov::before { content: attr(data-t); position: absolute; inset: 0; background: rgba(20,20,20,.72); color: #fff; font-size: 13px; font-weight: 600; padding: 10px; display: flex; align-items: flex-end; z-index: 1; }
+  @media (max-width: 860px) { .grid5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .hero { grid-template-columns: minmax(0, 1fr); } }
+
+  @media (max-width: 860px) {
+    .colors, .cells, .pros { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第一部分：Today 頁的送出按鈕</h1>
+  <p class="lead">目前的按鈕是一般 app 的圓角長方形，是整頁最不像「日記」的東西。下面四種形狀都從實體物件來：橡皮章、演唱會門票、紙膠帶、黑膠唱片。每種都用三種顏色示範，背景是 Led Zeppelin II 那天的頁面。把滑鼠移上去、按下去，可以看到互動效果。</p>
+
+  <div class="colors">
+    <div><b>1. 封面色（現在的做法）</b>每首歌不一樣，跟當天封面、筆圈、日期章同色。顏色都已加深到白字夠清楚。<div class="swatches"><i style="background:#8b6657"></i><i style="background:#8d7404"></i><i style="background:#007ba7"></i></div></div>
+    <div><b>2. 墨黑</b>固定黑色，像鋼筆墨水。最穩，每天都一樣，封面色只留給筆圈和日期章。<div class="swatches"><i style="background:#1a1a1a"></i></div></div>
+    <div><b>3. 搖滾紅</b>固定一個品牌色，跟 app 圖示的紅色唱片圓心一樣。每天都認得出來，但有時會跟封面撞色。<div class="swatches"><i style="background:#b3261e"></i></div></div>
+  </div>
+
+  <!-- current -->
+  <section class="option" id="current">
+    <div class="option-head"><span class="tag">現在</span><h2>圓角長方形</h2></div>
+    <p>對照用。乾淨，但跟日記的其他元素沒有關係。</p>
+    <div class="cells">
+      <div class="cell zep c-zep"><span class="cap">封面色</span><button class="btn b0">Submit Rating</button></div>
+      <div class="cell zep c-ink"><span class="cap">墨黑</span><button class="btn b0">Submit Rating</button></div>
+      <div class="cell zep c-red"><span class="cap">搖滾紅</span><button class="btn b0">Submit Rating</button></div>
+    </div>
+  </section>
+
+  <!-- A -->
+  <section class="option" id="option-a">
+    <div class="option-head"><span class="tag">A</span><h2>橡皮章</h2></div>
+    <p>跟頁面上的日期章是同一套語言。按下去時整個章「印」滿顏色，像在日記上蓋章。</p>
+    <div class="cells">
+      <div class="cell zep c-zep"><span class="cap">封面色</span><span class="rated">Rating: <b>Great<svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M6 24 C 8 6, 90 2, 95 18 C 99 34, 22 40, 8 30 C 2 24, 18 10, 52 8"/></svg></b></span><button class="btn bA">Stamp it</button></div>
+      <div class="cell zep c-ink"><span class="cap">墨黑</span><span class="rated">Rating: <b>Great<svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M6 24 C 8 6, 90 2, 95 18 C 99 34, 22 40, 8 30 C 2 24, 18 10, 52 8"/></svg></b></span><button class="btn bA">Stamp it</button></div>
+      <div class="cell zep c-red"><span class="cap">搖滾紅</span><span class="rated">Rating: <b>Great<svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M6 24 C 8 6, 90 2, 95 18 C 99 34, 22 40, 8 30 C 2 24, 18 10, 52 8"/></svg></b></span><button class="btn bA">Stamp it</button></div>
+    </div>
+    <div class="strip">封面色在其他歌：
+      <span class="mini sun c-sun"><button class="bA">Stamp it</button></span>
+      <span class="mini wee c-wee"><button class="bA">Stamp it</button></span>
+    </div>
+    <div class="pros"><div><b>好處：</b>最有一致性，跟日期章呼應；按下去的回饋很清楚。</div><div><b>代價：</b>外框樣式的按鈕比實心的稍不顯眼。</div></div>
+  </section>
+
+  <!-- B -->
+  <section class="option" id="option-b">
+    <div class="option-head"><span class="tag">B</span><h2>演唱會門票</h2></div>
+    <p>兩側有打洞的缺口，右邊是虛線撕線和票根，上面印著今天是第幾首。最有「搖滾」感。</p>
+    <div class="cells">
+      <div class="cell zep c-zep"><span class="cap">封面色</span><button class="btn bB"><span class="main">Submit Rating</span><span class="stub">Day<b>002</b></span></button></div>
+      <div class="cell zep c-ink"><span class="cap">墨黑</span><button class="btn bB"><span class="main">Submit Rating</span><span class="stub">Day<b>002</b></span></button></div>
+      <div class="cell zep c-red"><span class="cap">搖滾紅</span><button class="btn bB"><span class="main">Submit Rating</span><span class="stub">Day<b>002</b></span></button></div>
+    </div>
+    <div class="strip">封面色在其他歌：
+      <span class="mini sun c-sun"><button class="bB"><span class="main">Submit Rating</span><span class="stub">Day<b>008</b></span></button></span>
+      <span class="mini wee c-wee"><button class="bB"><span class="main">Submit Rating</span><span class="stub">Day<b>075</b></span></button></span>
+    </div>
+    <div class="pros"><div><b>好處：</b>實心、很顯眼，又有個性；票根上的數字是真的資訊。</div><div><b>代價：</b>日記裡出現門票是新的元素，不是延續現有的章和膠帶。</div></div>
+  </section>
+
+  <!-- C -->
+  <section class="option" id="option-c">
+    <div class="option-head"><span class="tag">C</span><h2>紙膠帶標籤</h2></div>
+    <p>一段邊緣撕開的紙膠帶，上面用手寫字寫著「Save to diary」。跟封面上的膠帶、曲風標籤同一個材質。</p>
+    <div class="cells">
+      <div class="cell zep c-zep"><span class="cap">封面色</span><button class="btn bC">Save to diary &rarr;</button></div>
+      <div class="cell zep c-ink"><span class="cap">墨黑</span><button class="btn bC">Save to diary &rarr;</button></div>
+      <div class="cell zep c-red"><span class="cap">搖滾紅</span><button class="btn bC">Save to diary &rarr;</button></div>
+    </div>
+    <div class="strip">封面色在其他歌：
+      <span class="mini sun c-sun"><button class="bC">Save to diary &rarr;</button></span>
+      <span class="mini wee c-wee"><button class="bC">Save to diary &rarr;</button></span>
+    </div>
+    <div class="pros"><div><b>好處：</b>最有手作感，最不像 app。</div><div><b>代價：</b>顏色淡，看起來比較不像按鈕；手寫字多了一處。</div></div>
+  </section>
+
+  <!-- D -->
+  <section class="option" id="option-d">
+    <div class="option-head"><span class="tag">D</span><h2>黑膠唱片</h2></div>
+    <p>一張小黑膠，唱片圓心是顏色所在。滑鼠移上去唱片會轉，旁邊寫著「Save rating」。</p>
+    <div class="cells">
+      <div class="cell zep c-zep"><span class="cap">封面色</span><button class="btn bD"><span class="disc"></span><span>Save rating <span class="arrow">&rarr;</span></span></button></div>
+      <div class="cell zep c-ink"><span class="cap">墨黑</span><button class="btn bD"><span class="disc"></span><span>Save rating <span class="arrow">&rarr;</span></span></button></div>
+      <div class="cell zep c-red"><span class="cap">搖滾紅</span><button class="btn bD"><span class="disc"></span><span>Save rating <span class="arrow">&rarr;</span></span></button></div>
+    </div>
+    <div class="strip">封面色在其他歌：
+      <span class="mini sun c-sun"><button class="bD"><span class="disc"></span><span>Save rating</span></button></span>
+      <span class="mini wee c-wee"><button class="bD"><span class="disc"></span><span>Save rating</span></button></span>
+    </div>
+    <div class="pros"><div><b>好處：</b>最獨特，也呼應 app 圖示。</div><div><b>代價：</b>按鈕面積大部分是黑色，顏色變化只在唱片中心，存在感比較弱；有點玩具感。</div></div>
+  </section>
+
+  <form class="decide" data-lavish-question="submit-button" onsubmit="event.preventDefault(); const f = new FormData(event.currentTarget); const shape = f.get('shape'); const color = f.get('color'); const note = (f.get('note') || '').trim(); if (!shape || !color) return; window.lavish && window.lavish.queuePrompt('Use submit button shape ' + shape + ' with color ' + color + (note ? '. Notes: ' + note : ''), { tag: 'choice', text: 'Button: ' + shape + ' / ' + color + (note ? ' (' + note + ')' : ''), element: event.currentTarget, data: { question: 'submit-button', shape, color, note } });">
+    <h2>你的選擇</h2>
+    <fieldset><legend>形狀</legend>
+      <label><input type="radio" name="shape" value="A stamp"> A 橡皮章</label>
+      <label><input type="radio" name="shape" value="B ticket"> B 演唱會門票</label>
+      <label><input type="radio" name="shape" value="C tape"> C 紙膠帶標籤</label>
+      <label><input type="radio" name="shape" value="D record"> D 黑膠唱片</label>
+      <label><input type="radio" name="shape" value="current"> 維持現在的</label>
+    </fieldset>
+    <fieldset><legend>顏色</legend>
+      <label><input type="radio" name="color" value="cover"> 封面色（每首歌不同）</label>
+      <label><input type="radio" name="color" value="ink"> 墨黑</label>
+      <label><input type="radio" name="color" value="red"> 搖滾紅</label>
+    </fieldset>
+    <textarea name="note" placeholder="想調整的地方（選填），例如「A 但字改成 Submit Rating」"></textarea>
+    <button type="submit" class="go">送出選擇</button>
+  </form>
+
+  <h2 class="part">第二部分：History 頁，讓封面最先出現</h2>
+  <p class="lead">現在一打開 History，最先看到的是數字和搜尋框，封面要往下捲才看得到。下面三種版面都讓封面第一眼就出現，差別在搜尋和統計放哪裡。</p>
+
+  <section class="option" id="history-1">
+    <div class="option-head"><span class="tag">H1</span><h2>封面優先，工具收成一行</h2></div>
+    <p>標題、統計、搜尋擠在同一行，年代和曲風收進「Filter」，點了才展開。封面牆緊接在下面。</p>
+    <div class="hmock">
+      <div class="hbar"><b>Daily Rock</b><span>Today</span><span class="on">History</span><span class="streak">12 day streak</span></div>
+      <div class="h1head"><h3>Listening History</h3><span class="meta">12 songs · avg 2.8 · 12-day streak</span>
+        <span class="tool"><span class="srch">Search…</span><u>Filter ▾</u></span></div>
+      <div class="grid5" data-fill="10" data-kind="card"></div>
+    </div>
+    <div class="pros"><div><b>好處：</b>封面第一眼就出現；搜尋隨時可以用。</div><div><b>代價：</b>年代和曲風要多點一下才看得到。</div></div>
+  </section>
+
+  <section class="option" id="history-2">
+    <div class="option-head"><span class="tag">H2</span><h2>最新一首放大，其他排成牆</h2></div>
+    <p>最上面是你最近聽的那首：大封面加手寫筆記，像日記翻開的那一頁。下面一條細細的篩選列，再下面是其他封面。</p>
+    <div class="hmock">
+      <div class="hbar"><b>Daily Rock</b><span>Today</span><span class="on">History</span><span class="streak">12 day streak</span></div>
+      <div class="hero">
+        <div class="tp"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1a/3d/bb/1a3dbb86-c1f8-737e-571f-d6b647a230be/dj.rhubuvkd.jpg/300x300bb.jpg" alt=""></div>
+        <div><div class="lbl">Last listened · Sep 29</div><h3>Whole Lotta Love</h3><div class="by">Led Zeppelin · Led Zeppelin II, 1969</div>
+          <span class="card"><span class="r">Rated <b>Classic</b></span></span><div class="note">That riff never gets old</div></div>
+      </div>
+      <div class="slim"><span class="srch">Search…</span><span class="era">Era: All 1950s 1960s <b>1970s</b> 1990s</span><span class="tape">Hard Rock 3</span><span class="tape">Grunge 2</span><span class="tape">Punk 1</span><span>12 songs · avg 2.8</span></div>
+      <div class="grid5" data-fill="10" data-kind="card" data-skip="1"></div>
+    </div>
+    <div class="pros"><div><b>好處：</b>最有故事感，一打開就是「上次聽了什麼」；統計縮成一行小字。</div><div><b>代價：</b>篩選列比較擠；最新那首佔一塊空間。</div></div>
+  </section>
+
+  <section class="option" id="history-3">
+    <div class="option-head"><span class="tag">H3</span><h2>滿版封面牆</h2></div>
+    <p>整頁幾乎只有封面，像唱片行的牆。封面左下角有日期小章，滑鼠移上去才顯示歌名和評分（第五張示範移上去的樣子）。搜尋和篩選收在右上角的按鈕。</p>
+    <div class="hmock">
+      <div class="hbar"><b>Daily Rock</b><span>Today</span><span class="on">History</span><span class="streak">12 day streak</span></div>
+      <div class="wallhead"><h3>Listening History</h3><span style="font-size:13.5px;color:var(--text-2)">12 songs</span><span class="pill">Search &amp; filter</span></div>
+      <div class="grid6" data-fill="12" data-kind="wall"></div>
+    </div>
+    <div class="pros"><div><b>好處：</b>封面最大最多，最像實體唱片收藏。</div><div><b>代價：</b>要移上去（手機要點）才知道是哪首歌；筆記看不到。</div></div>
+  </section>
+
+  <form class="decide" data-lavish-question="history-layout" onsubmit="event.preventDefault(); const f = new FormData(event.currentTarget); const layout = f.get('layout'); const note = (f.get('note') || '').trim(); if (!layout) return; window.lavish && window.lavish.queuePrompt('Use History layout ' + layout + (note ? '. Notes: ' + note : ''), { tag: 'choice', text: 'History: ' + layout + (note ? ' (' + note + ')' : ''), element: event.currentTarget, data: { question: 'history-layout', layout, note } });">
+    <h2>History 版面</h2>
+    <fieldset><legend>版面</legend>
+      <label><input type="radio" name="layout" value="H1 covers first"> H1 封面優先，工具收成一行</label>
+      <label><input type="radio" name="layout" value="H2 latest hero"> H2 最新一首放大，其他排成牆</label>
+      <label><input type="radio" name="layout" value="H3 cover wall"> H3 滿版封面牆</label>
+    </fieldset>
+    <textarea name="note" placeholder="想調整的地方（選填）"></textarea>
+    <button type="submit" class="go">送出 History 選擇</button>
+  </form>
+
+<script>
+  const covers = [
+    ["Whole Lotta Love", "Led Zeppelin", "Classic", "Sep 29", "Music125/v4/1a/3d/bb/1a3dbb86-c1f8-737e-571f-d6b647a230be/dj.rhubuvkd.jpg"],
+    ["Great Balls of Fire", "Jerry Lee Lewis", "Great", "Sep 28", "Music221/v4/d2/32/f9/d232f9bf-dd25-e7f2-6e7c-176bd938d0c8/00015047901005_Cover.jpg"],
+    ["Money", "Pink Floyd", "Good", "Sep 27", "Music221/v4/3e/76/b0/3e76b0e3-762b-2286-a019-8afb19cee541/886445635829.jpg"],
+    ["Smells Like Teen Spirit", "Nirvana", "Classic", "Sep 26", "Music115/v4/95/fd/b9/95fdb9b2-6d2b-92a6-97f2-51c1a6d77f1a/00602527874609.rgb.jpg"],
+    ["Buddy Holly", "Weezer", "Great", "Sep 25", "Music211/v4/98/f8/ab/98f8ab48-2bb6-ef63-4061-404459b02202/16UMGIM52971.rgb.jpg"],
+    ["I Bet You Look Good…", "Arctic Monkeys", "Meh", "Sep 24", "Features125/v4/cf/9b/96/cf9b9637-f619-eceb-5382-e9b4d44e74fb/dj.npwkgmai.jpg"],
+    ["Go Your Own Way", "Fleetwood Mac", "Great", "Sep 23", "Music124/v4/4d/13/ba/4d13bac3-d3d5-7581-2c74-034219eadf2b/081227970949.jpg"],
+    ["Paranoid", "Black Sabbath", "Good", "Sep 22", "Music125/v4/be/27/91/be279120-2285-16c6-c7ba-9d6643d4a948/075992732727.jpg"],
+    ["Blitzkrieg Bop", "Ramones", "Great", "Sep 21", "Music/v4/eb/c0/ab/ebc0ab80-e4df-08fd-64fd-e3c464e6c607/603497909629.jpg"],
+    ["Wonderwall", "Oasis", "Good", "Sep 20", "Music113/v4/04/92/e0/0492e08b-cbcc-9969-9ad6-8f5a0888068c/5051961007107.jpg"],
+    ["Sunshine of Your Love", "Cream", "Classic", "Sep 19", "Music115/v4/9f/3f/da/9f3fdaab-98af-bec1-633c-212a2705ccf3/00602537802913.rgb.jpg"],
+    ["Psycho Killer", "Talking Heads", "Great", "Sep 18", "Music/f0/7a/44/mzi.gxryruwe.jpg"],
+  ];
+  const url = (path) => "https://is1-ssl.mzstatic.com/image/thumb/" + path + "/300x300bb.jpg";
+  for (const box of document.querySelectorAll("[data-fill]")) {
+    const n = +box.dataset.fill, skip = +(box.dataset.skip || 0);
+    box.innerHTML = covers.slice(skip, skip + n).map(([t, a, r, d, p], i) => box.dataset.kind === "wall"
+      ? '<div class="wall' + (i === 4 ? " hov" : "") + '" data-t="' + t + " · " + a + " · " + r + '"><img src="' + url(p) + '" alt=""><span class="ov">' + d + "</span></div>"
+      : '<div class="card"><div class="tp"><img src="' + url(p) + '" alt=""></div><span class="stampS">' + d + '</span><div class="t">' + t + '</div><div class="a">' + a + '</div><div class="r"><b>' + r + "</b></div></div>"
+    ).join("");
+  }
+</script>
+</div>
+</body>
+</html>
