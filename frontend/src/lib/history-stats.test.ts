@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   computeAverageRating,
   computeCurrentStreak,
@@ -54,6 +54,15 @@ describe("computeAverageRating", () => {
 });
 
 describe("computeCurrentStreak", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test("returns 0 for an empty list", () => {
     expect(computeCurrentStreak([])).toBe(0);
   });
@@ -79,6 +88,20 @@ describe("computeCurrentStreak", () => {
       item({ rating_id: "r1", timestamp: "2026-08-15 09:00:00" }),
     ];
     expect(computeCurrentStreak(items)).toBe(1);
+  });
+
+  test("is 0 once a full day has passed without listening", () => {
+    const items = [item({ timestamp: "2026-08-15 09:00:00" })];
+    expect(computeCurrentStreak(items, new Date("2026-08-17T12:00:00Z"))).toBe(
+      0
+    );
+  });
+
+  test("stays alive until the end of the day after the last listen", () => {
+    const items = [item({ timestamp: "2026-08-15 09:00:00" })];
+    expect(computeCurrentStreak(items, new Date("2026-08-16T23:00:00Z"))).toBe(
+      1
+    );
   });
 
   test("stops counting at the first gap in days", () => {

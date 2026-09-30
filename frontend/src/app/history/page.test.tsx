@@ -50,6 +50,9 @@ const mockHistory: HistoryItem[] = [
 
 describe("HistoryPage", () => {
   beforeEach(() => {
+    // Fixture ratings end on Aug 15, so the streak is live on that day.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -61,6 +64,7 @@ describe("HistoryPage", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
