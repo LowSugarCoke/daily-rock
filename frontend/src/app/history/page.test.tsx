@@ -18,6 +18,11 @@ const mockHistory: HistoryItem[] = [
     era: "1970s",
     genre_tags: ["Hard Rock", "Classic Rock"],
     youtube_id: "HQmmM_vIi4I",
+    album: "Led Zeppelin II",
+    year: 1969,
+    cover_url:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+    cover_color: "#b28470",
     rating: 5,
     note: "That riff never gets old",
     timestamp: "2026-08-15 09:00:00",
@@ -30,6 +35,11 @@ const mockHistory: HistoryItem[] = [
     era: "1970s",
     genre_tags: ["Heavy Metal"],
     youtube_id: "xyz",
+    album: "Paranoid",
+    year: 1970,
+    cover_url:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+    cover_color: "#c992a0",
     rating: 4,
     note: null,
     timestamp: "2026-08-14 09:00:00",
@@ -42,6 +52,11 @@ const mockHistory: HistoryItem[] = [
     era: "1950s",
     genre_tags: ["Rock 'n' Roll"],
     youtube_id: "T38v3-SSGcM",
+    album: "Berry Is On Top",
+    year: 1958,
+    cover_url:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+    cover_color: "#eda273",
     rating: 3,
     note: null,
     timestamp: "2026-08-13 09:00:00",
@@ -139,5 +154,15 @@ describe("HistoryPage", () => {
     });
 
     expect(screen.getByText(/no results/i)).toBeInTheDocument();
+  });
+  test("shows each row's album, year, cover and rating in words", async () => {
+    render(<HistoryPage />);
+
+    const row = (await screen.findByText("Whole Lotta Love")).closest("li")!;
+    expect(within(row).getByText("Led Zeppelin II, 1969")).toBeInTheDocument();
+    expect(
+      within(row).getByAltText("Led Zeppelin II cover")
+    ).toBeInTheDocument();
+    expect(within(row).getByText("Classic")).toBeInTheDocument();
   });
 });

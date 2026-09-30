@@ -1,20 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, IBM_Plex_Mono } from "next/font/google";
 import AppShell from "@/components/AppShell";
 import "./globals.css";
-
-const anton = Anton({
-  variable: "--font-anton",
-  subsets: ["latin"],
-  weight: "400",
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-});
 
 export const metadata: Metadata = {
   title: "Daily Rock",
@@ -28,12 +14,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f2eee5",
+  themeColor: "#fbfaf8",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${anton.variable} ${plexMono.variable}`}>
+    <html lang="en">
       <body>
         <AppShell>{children}</AppShell>
       </body>

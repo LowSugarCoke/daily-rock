@@ -33,15 +33,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.shell}>
-      <header className={styles.masthead}>
-        <div className={styles.mastRow}>
-          <h1 className={styles.brandWord}>Daily Rock</h1>
-          {streak !== null && streak > 0 && (
-            <span className={styles.streak}>
-              <span className={styles.streakValue}>{streak}</span> day streak
-            </span>
-          )}
-        </div>
+      <header className={styles.bar}>
+        <h1 className={styles.brandWord}>Daily Rock</h1>
         <nav className={styles.tabs} aria-label="Main">
           {TABS.map(({ href, label }) => {
             const isActive =
@@ -57,8 +50,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
-          <span className={styles.tagline}>One song a day</span>
         </nav>
+        {streak !== null && streak > 0 && (
+          <span className={styles.streak}>
+            <span>{streak}</span> day streak
+          </span>
+        )}
       </header>
       <div className={styles.body}>{children}</div>
     </div>

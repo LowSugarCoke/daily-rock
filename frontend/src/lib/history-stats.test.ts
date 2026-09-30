@@ -16,6 +16,11 @@ function item(overrides: Partial<HistoryItem>): HistoryItem {
     era: "1950s",
     genre_tags: ["Rock 'n' Roll"],
     youtube_id: "T38v3-SSGcM",
+    album: "Berry Is On Top",
+    year: 1958,
+    cover_url:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+    cover_color: "#eda273",
     rating: 5,
     note: null,
     timestamp: "2026-08-15 12:00:00",

@@ -9,6 +9,11 @@ const mockSong = {
   era: "1950s",
   genre_tags: ["Rock 'n' Roll"],
   youtube_id: "T38v3-SSGcM",
+  album: "Berry Is On Top",
+  year: 1958,
+  cover_url:
+    "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+  cover_color: "#eda273",
 };
 
 const mockNextSong = {
@@ -18,6 +23,11 @@ const mockNextSong = {
   era: "1960s",
   genre_tags: ["Hard Rock", "Classic Rock"],
   youtube_id: "HQmmM_vIi4I",
+  album: "Led Zeppelin II",
+  year: 1969,
+  cover_url:
+    "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+  cover_color: "#b28470",
 };
 
 describe("Home Component", () => {
@@ -63,6 +73,36 @@ describe("Home Component", () => {
     expect(screen.getByText("Chuck Berry")).toBeInTheDocument();
     expect(screen.getByText("1950s")).toBeInTheDocument();
     expect(screen.getByText("Rock 'n' Roll")).toBeInTheDocument();
+  });
+
+  test("shows the album credits and cover", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    expect(
+      await screen.findByText("Berry Is On Top, 1958")
+    ).toBeInTheDocument();
+    expect(screen.getByAltText("Berry Is On Top cover")).toBeInTheDocument();
+  });
+
+  test("tints the page with the cover colour", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    await screen.findByText("Johnny B. Goode");
+    expect(document.documentElement.style.getPropertyValue("--cover")).toBe(
+      "#eda273"
+    );
   });
 
   test("embeds a YouTube player for the current song", async () => {

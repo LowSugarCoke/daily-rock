@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import styles from "./page.module.css";
 import {
   computeAverageRating,
@@ -8,6 +9,7 @@ import {
   formatDayMonth,
 } from "@/lib/history-stats";
 import type { HistoryItem } from "@/lib/types";
+import { ratingWord } from "@/lib/rating";
 
 const ALL = "";
 
@@ -210,45 +212,32 @@ export default function HistoryPage() {
                   const { day, month } = formatDayMonth(item.timestamp);
                   return (
                     <li key={item.rating_id} className={styles.row}>
-                      <div className={styles.rowDate}>
-                        <span className={styles.rowDateDay}>{day}</span>
-                        <span className={styles.rowDateMonth}>{month}</span>
-                      </div>
+                      <Image
+                        className={styles.rowCover}
+                        src={item.cover_url}
+                        alt={`${item.album} cover`}
+                        width={120}
+                        height={120}
+                      />
                       <div className={styles.rowMain}>
-                        <div className={styles.rowTitleLine}>
-                          <span className={styles.rowTitle}>{item.title}</span>
-                          <span className={styles.rowArtist}>
-                            {item.artist}
-                          </span>
-                        </div>
-                        <div className={styles.rowTags}>
-                          <span className={styles.rowEra}>{item.era}</span>
-                          {item.genre_tags.map((tag) => (
-                            <span key={tag} className={styles.rowGenre}>
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                        <span className={styles.rowTitle}>{item.title}</span>
+                        <span className={styles.rowArtist}>{item.artist}</span>
+                        <span className={styles.rowAlbum}>
+                          {`${item.album}, ${item.year}`}
+                        </span>
                         {item.note && (
-                          <p className={styles.rowNote}>
-                            &ldquo;{item.note}&rdquo;
-                          </p>
+                          <p className={styles.rowNote}>{item.note}</p>
                         )}
                       </div>
-                      <div
+                      <span
                         className={styles.rowRating}
-                        role="img"
-                        aria-label={`Rated ${item.rating} out of 5`}
+                        data-rating={item.rating}
                       >
-                        {[1, 2, 3, 4, 5].map((value) => (
-                          <span
-                            key={value}
-                            className={`${styles.rowTick} ${
-                              value <= item.rating ? styles.rowTickOn : ""
-                            }`}
-                          />
-                        ))}
-                      </div>
+                        {ratingWord(item.rating)}
+                      </span>
+                      <span className={styles.rowDate}>
+                        {month} {Number(day)}
+                      </span>
                     </li>
                   );
                 })}

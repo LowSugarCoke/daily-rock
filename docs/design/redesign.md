@@ -1,26 +1,13 @@
-# Design: record sleeve
+# Design: the album leads
 
-Each day's song is laid out like the back of a single's sleeve, and History is a printed tracklist. It replaced a dark redesign that you rejected as AI-looking (dark background with one accent, rounded cards, pill tags, bold geometric sans, stock icons). Avoid that set of choices.
+The design gets its character from real content, not from style choices. Two earlier attempts were rejected as AI-looking: a dark theme with one accent color, and a paper "record sleeve" with monospace type. Both got their look from font and color picks that AI tools default to.
 
 ## Rules
-- Paper and ink. One print red for the catalog number, the active tab and focus. No rounded corners, shadows, gradients, or icon set.
-- Structure comes from rules: 4px ink rules open a section, 1px rules separate items.
-- Type: Anton (uppercase) for titles, IBM Plex Mono for everything else.
-- Tags are written as text: `1960s / Hard Rock`.
-- The rating is a strip of five tick boxes (number plus caption). The selected box is filled with ink.
-- Notes go on ruled lines.
-
-## Tokens (WCAG contrast on paper)
-| Token | Value | Contrast |
-|---|---|---|
-| paper | #F2EEE5 | |
-| paper-2 (hover) | #E8E2D5 | |
-| ink | #161512 | 15.8 |
-| ink-2 | #57524A | 6.7 |
-| ink-3 (placeholders, captions) | #6B655B | 5.0 |
-| red | #B8321F | 5.2 |
-| green (success) | #2F6B3A | 5.5 |
-| rule-soft (note lines) | #CFC7B6 | decorative |
+- Each song's real album cover is the main visual. The page background is a soft tint of the cover's color (`--cover`, set in `app/page.tsx`). Near-black, near-white and grey covers keep the neutral background (`lib/cover-tint.ts`).
+- The credits are real: album and year from the iTunes catalog, matched by hand to each song's original album (migration 0004).
+- Type: the system font stack only, in normal case with normal tracking. No uppercase eyebrow labels, pill tags or icon set.
+- Desktop: two columns (cover and player | title, credits, rating, notes). Phone: cover thumbnail beside the title, then a full-width player.
+- Rating: a segmented control of words (Skip / Meh / Good / Great / Classic). History shows the word, not stars.
 
 ## Must keep (tests)
 Class names `songCard`, `songArtist`, `eraTag`, `genreTag` (span), and `statusBox` (+ `warning`/`error`). One `h1` "Daily Rock", an `h2` song title, "Rate this Song", `aria-label` "Rate N star(s)", the textarea placeholder "Add private notes...", the search placeholder "Search title or artist", and the labels "Songs Logged" / "Average Rating" / "Current Streak".

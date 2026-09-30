@@ -7,6 +7,16 @@ const backendUrl = rawBackendUrl.endsWith("/")
   : rawBackendUrl;
 
 const nextConfig: NextConfig = {
+  images: {
+    // Album covers come from the iTunes catalog (see migration 0004).
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.mzstatic.com",
+        pathname: "/image/thumb/**",
+      },
+    ],
+  },
   async rewrites() {
     return [
       {

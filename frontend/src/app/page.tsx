@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import styles from "./page.module.css";
 import type { Song } from "@/lib/types";
-
-const RATING_CAPTIONS = ["Skip", "Meh", "Good", "Great", "Classic"];
+import { RATING_WORDS } from "@/lib/rating";
+import { coverTint } from "@/lib/cover-tint";
 
 export default function Home() {
   const [song, setSong] = useState<Song | null>(null);
@@ -14,7 +15,6 @@ export default function Home() {
 
   // Rating and progression states
   const [rating, setRating] = useState<number | null>(null);
-  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [note, setNote] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
@@ -48,6 +48,17 @@ export default function Home() {
         setSubmitSuccess(false); // Reset success state on error
       });
   }, [fetchTrigger]);
+
+  // Tint the whole page with the current album's cover colour.
+  useEffect(() => {
+    const tint = song && coverTint(song.cover_color);
+    if (!tint) return;
+    const root = document.documentElement;
+    root.style.setProperty("--cover", tint);
+    return () => {
+      root.style.removeProperty("--cover");
+    };
+  }, [song]);
 
   const handleSubmitRating = async () => {
     if (!song) return;
@@ -93,7 +104,6 @@ export default function Home() {
       setSong(null); // Clear the rated song state immediately to prevent regression/residual UI
       setRating(null);
       setNote("");
-      setHoverRating(null);
       setLoading(true);
       setError(null);
       setNoSong(false);
@@ -105,7 +115,6 @@ export default function Home() {
     }
   };
 
-  const displayRating = hoverRating ?? rating;
   const todayLabel = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -115,63 +124,59 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <div className={styles.heroRow}>
+        <p className={styles.heroRow}>
           <span className={styles.eyebrow}>Today&apos;s Selection</span>
           <span className={styles.dayLabel}>{todayLabel}</span>
-        </div>
+        </p>
 
-        <div className={styles.selectionSection}>
-          {loading && !submitSuccess && (
-            <div className={styles.statusBox}>
-              <span className={styles.spinner} aria-hidden="true"></span>
-              {"Loading today's selection..."}
+        {loading && !submitSuccess && (
+          <div className={styles.statusBox}>
+            <span className={styles.spinner} aria-hidden="true"></span>
+            {"Loading today's selection..."}
+          </div>
+        )}
+
+        {submitSuccess && (
+          <div className={`${styles.statusBox} ${styles.success}`}>
+            <span>Success! Loading next selection...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className={`${styles.statusBox} ${styles.error}`}>
+            <div className={styles.errorContent}>
+              <h3 className={styles.errorTitle}>
+                {"Failed to load today's selection"}
+              </h3>
+              <p className={styles.errorMessage}>{error}</p>
             </div>
-          )}
+          </div>
+        )}
 
-          {submitSuccess && (
-            <div className={`${styles.statusBox} ${styles.success}`}>
-              <span>Success! Loading next selection...</span>
-            </div>
-          )}
-
-          {error && (
-            <div className={`${styles.statusBox} ${styles.error}`}>
-              <div className={styles.errorContent}>
-                <h3 className={styles.errorTitle}>
-                  {"Failed to load today's selection"}
-                </h3>
-                <p className={styles.errorMessage}>{error}</p>
-              </div>
-            </div>
-          )}
-
-          {noSong && (
-            <div className={`${styles.statusBox} ${styles.warning}`}>
-              <div className={styles.warningContent}>
-                <h3 className={styles.warningTitle}>
-                  No daily selection available
-                </h3>
-                <p className={styles.warningMessage}>
-                  There are no songs loaded in the database yet.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {song && !loading && (
-            <article className={styles.songCard}>
-              <p className={styles.catalog}>No. {song.id.padStart(3, "0")}</p>
-              <h2 className={styles.songTitle}>{song.title}</h2>
-              <p className={styles.songArtist}>{song.artist}</p>
-              <p className={styles.tagsRow}>
-                <span className={styles.eraTag}>{song.era}</span>
-                {song.genre_tags.map((tag) => (
-                  <span key={tag} className={styles.genreTag}>
-                    {tag}
-                  </span>
-                ))}
+        {noSong && (
+          <div className={`${styles.statusBox} ${styles.warning}`}>
+            <div className={styles.warningContent}>
+              <h3 className={styles.warningTitle}>
+                No daily selection available
+              </h3>
+              <p className={styles.warningMessage}>
+                There are no songs loaded in the database yet.
               </p>
+            </div>
+          </div>
+        )}
 
+        {song && !loading && (
+          <article className={styles.songCard}>
+            <div className={styles.mediaCol}>
+              <Image
+                className={styles.cover}
+                src={song.cover_url}
+                alt={`${song.album} cover`}
+                width={600}
+                height={600}
+                priority
+              />
               <div className={styles.player}>
                 <iframe
                   className={styles.playerFrame}
@@ -182,39 +187,47 @@ export default function Home() {
                   allowFullScreen
                 />
               </div>
+            </div>
+
+            <div className={styles.infoCol}>
+              <div className={styles.heading}>
+                <h2 className={styles.songTitle}>{song.title}</h2>
+                <p className={styles.songArtist}>{song.artist}</p>
+                <p className={styles.album}>{`${song.album}, ${song.year}`}</p>
+                <p className={styles.tagsRow}>
+                  <span className={styles.eraTag}>{song.era}</span>
+                  {song.genre_tags.map((tag) => (
+                    <span key={tag} className={styles.genreTag}>
+                      {tag}
+                    </span>
+                  ))}
+                </p>
+              </div>
 
               <section className={styles.ratingSection}>
-                <div className={styles.ratingHead}>
-                  <h3 className={styles.ratingTitle}>Rate this Song</h3>
-                  <span className={styles.ratingHint}>
-                    {rating
-                      ? `${rating} / 5 - ${RATING_CAPTIONS[rating - 1]}`
-                      : "Tick one"}
-                  </span>
-                </div>
-
-                <div className={styles.scale}>
-                  {[1, 2, 3, 4, 5].map((value) => {
-                    const isOn = displayRating === value;
+                <h3 className={styles.ratingTitle}>Rate this Song</h3>
+                <div
+                  className={styles.segmented}
+                  role="group"
+                  aria-label="Rating"
+                >
+                  {RATING_WORDS.map((word, index) => {
+                    const value = index + 1;
+                    const isOn = rating === value;
                     return (
                       <button
                         key={value}
                         type="button"
-                        className={`${styles.scaleBox} ${isOn ? styles.scaleBoxOn : ""}`}
+                        className={`${styles.segment} ${isOn ? styles.segmentOn : ""}`}
                         onClick={() => {
                           setRating(value);
                           setValidationError(null);
                         }}
-                        onMouseEnter={() => setHoverRating(value)}
-                        onMouseLeave={() => setHoverRating(null)}
                         aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
-                        aria-pressed={rating === value}
+                        aria-pressed={isOn}
                         disabled={submitting}
                       >
-                        <span className={styles.scaleNumber}>{value}</span>
-                        <span className={styles.scaleCaption}>
-                          {RATING_CAPTIONS[value - 1]}
-                        </span>
+                        {word}
                       </button>
                     );
                   })}
@@ -252,9 +265,9 @@ export default function Home() {
                   {submitting ? "Submitting..." : "Submit Rating"}
                 </button>
               </section>
-            </article>
-          )}
-        </div>
+            </div>
+          </article>
+        )}
       </main>
     </div>
   );

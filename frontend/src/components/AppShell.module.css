@@ -5,78 +5,54 @@
   flex-direction: column;
 }
 
-.masthead {
-  width: 100%;
-  max-width: calc(var(--measure) + 2 * var(--gutter));
-  margin: 0 auto;
-  padding: 20px var(--gutter) 0;
-}
-
-.mastRow {
+.bar {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 10px;
-  border-bottom: 4px solid var(--ink);
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  height: 64px;
+  padding: 0 32px;
 }
 
 .brandWord {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 44px;
-  line-height: 0.9;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-}
-
-.streak {
-  font-size: 13px;
-  color: var(--ink-2);
-  white-space: nowrap;
-  padding-bottom: 2px;
-}
-
-.streakValue {
-  font-weight: 600;
-  color: var(--red);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .tabs {
   display: flex;
-  align-items: stretch;
-  gap: 24px;
-  border-bottom: 1px solid var(--ink);
+  gap: 4px;
 }
 
 .tab {
   display: flex;
   align-items: center;
   min-height: 44px;
-  font-size: 14px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-2);
-  border-bottom: 3px solid transparent;
-  margin-bottom: -1px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--text-2);
+  transition: background-color 120ms ease;
 }
 
 .tab:hover {
-  color: var(--ink);
+  color: var(--text);
+  background: color-mix(in oklab, var(--cover) 10%, transparent);
 }
 
 .tabActive {
-  color: var(--ink);
-  border-bottom-color: var(--red);
+  color: var(--text);
+  font-weight: 600;
 }
 
-.tagline {
+.streak {
   margin-left: auto;
-  align-self: center;
-  font-size: 13px;
-  font-style: italic;
-  color: var(--ink-3);
+  font-size: 14px;
+  color: var(--text-2);
+  white-space: nowrap;
 }
 
 .body {
@@ -86,11 +62,17 @@
 }
 
 @media (max-width: 640px) {
-  .brandWord {
-    font-size: 36px;
+  .bar {
+    gap: 12px;
+    height: 56px;
+    padding: 0 16px;
   }
 
-  .tagline {
-    display: none;
+  .brandWord {
+    font-size: 16px;
+  }
+
+  .tab {
+    padding: 0 8px;
   }
 }

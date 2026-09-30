@@ -5,6 +5,10 @@ export interface Song {
   era: string;
   genre_tags: string[];
   youtube_id: string;
+  album: string;
+  year: number;
+  cover_url: string;
+  cover_color: string;
 }
 
 export interface HistoryItem {
@@ -15,6 +19,10 @@ export interface HistoryItem {
   era: string;
   genre_tags: string[];
   youtube_id: string;
+  album: string;
+  year: number;
+  cover_url: string;
+  cover_color: string;
   rating: number;
   note: string | null;
   timestamp: string;
