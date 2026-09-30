@@ -7,6 +7,7 @@ use tower_service::Service;
 use worker::*;
 
 pub mod handlers;
+pub mod progress;
 pub mod store;
 
 #[derive(Clone)]
