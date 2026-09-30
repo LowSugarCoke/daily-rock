@@ -13,6 +13,10 @@ pub struct D1Song {
     pub era: String,
     pub genre_tags: String, // Stored as a JSON-serialized array in SQLite/D1
     pub youtube_id: String,
+    pub album: String,
+    pub year: u16,
+    pub cover_url: String,
+    pub cover_color: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -24,6 +28,10 @@ pub struct D1HistoryItem {
     pub era: String,
     pub genre_tags: String, // stored as JSON array string
     pub youtube_id: String,
+    pub album: String,
+    pub year: u16,
+    pub cover_url: String,
+    pub cover_color: String,
     pub rating: u8,
     pub note: Option<String>,
     pub timestamp: String,
@@ -41,7 +49,7 @@ impl D1SongStore {
     // A helper method that performs the D1 database query and deserializes the fields.
     async fn fetch_daily_selection(&self) -> Option<Song> {
         let statement = self.db.prepare(
-            "SELECT s.id, s.title, s.artist, s.era, s.genre_tags, s.youtube_id \
+            "SELECT s.id, s.title, s.artist, s.era, s.genre_tags, s.youtube_id, s.album, s.year, s.cover_url, s.cover_color \
              FROM songs s \
              LEFT JOIN ratings r ON s.id = r.daily_selection_id \
              WHERE r.id IS NULL \
@@ -56,6 +64,10 @@ impl D1SongStore {
             era: d1_song.era,
             genre_tags,
             youtube_id: d1_song.youtube_id,
+            album: d1_song.album,
+            year: d1_song.year,
+            cover_url: d1_song.cover_url,
+            cover_color: d1_song.cover_color,
         })
     }
 }
@@ -92,7 +104,7 @@ impl SongStore for D1SongStore {
         query: HistoryQuery,
     ) -> Pin<Box<dyn Future<Output = worker::Result<Vec<HistoryItem>>> + Send + '_>> {
         Box::pin(SendFuture::new(async move {
-            let mut sql = "SELECT r.id AS rating_id, r.daily_selection_id AS song_id, s.title, s.artist, s.era, s.genre_tags, s.youtube_id, r.rating, r.note, r.timestamp \
+            let mut sql = "SELECT r.id AS rating_id, r.daily_selection_id AS song_id, s.title, s.artist, s.era, s.genre_tags, s.youtube_id, s.album, s.year, s.cover_url, s.cover_color, r.rating, r.note, r.timestamp \
                            FROM ratings r \
                            JOIN songs s ON r.daily_selection_id = s.id".to_string();
 
@@ -144,6 +156,10 @@ impl SongStore for D1SongStore {
                     era: item.era,
                     genre_tags,
                     youtube_id: item.youtube_id,
+                    album: item.album,
+                    year: item.year,
+                    cover_url: item.cover_url,
+                    cover_color: item.cover_color,
                     rating: item.rating,
                     note: item.note,
                     timestamp: item.timestamp,

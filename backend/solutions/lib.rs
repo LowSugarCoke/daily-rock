@@ -115,6 +115,10 @@ mod tests {
         assert_eq!(body.era, "1950s");
         assert_eq!(body.genre_tags, vec!["Rock 'n' Roll".to_string()]);
         assert_eq!(body.youtube_id, "T38v3-SSGcM");
+        assert_eq!(body.album, "Berry Is On Top");
+        assert_eq!(body.year, 1958);
+        assert!(body.cover_url.starts_with("https://"));
+        assert_eq!(body.cover_color, "#eda273");
     }
 
     #[tokio::test]

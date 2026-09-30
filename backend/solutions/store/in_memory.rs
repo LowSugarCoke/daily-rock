@@ -20,6 +20,12 @@ impl InMemorySongStore {
                     era: "1950s".to_string(),
                     genre_tags: vec!["Rock 'n' Roll".to_string()],
                     youtube_id: "T38v3-SSGcM".to_string(),
+                    album: "Berry Is On Top".to_string(),
+                    year: 1958,
+                    cover_url:
+                        "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/berry/600x600bb.jpg"
+                            .to_string(),
+                    cover_color: "#eda273".to_string(),
                 },
                 Song {
                     id: "2".to_string(),
@@ -28,6 +34,12 @@ impl InMemorySongStore {
                     era: "1960s".to_string(),
                     genre_tags: vec!["Hard Rock".to_string(), "Classic Rock".to_string()],
                     youtube_id: "HQmmM_vIi4I".to_string(),
+                    album: "Led Zeppelin II".to_string(),
+                    year: 1969,
+                    cover_url:
+                        "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/zep2/600x600bb.jpg"
+                            .to_string(),
+                    cover_color: "#b28470".to_string(),
                 },
                 Song {
                     id: "3".to_string(),
@@ -36,6 +48,12 @@ impl InMemorySongStore {
                     era: "1970s".to_string(),
                     genre_tags: vec!["Progressive Rock".to_string(), "Glam Rock".to_string()],
                     youtube_id: "fJ9rUzIMcZQ".to_string(),
+                    album: "A Night At the Opera".to_string(),
+                    year: 1975,
+                    cover_url:
+                        "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/queen/600x600bb.jpg"
+                            .to_string(),
+                    cover_color: "#a77266".to_string(),
                 },
             ],
             ratings: std::sync::Mutex::new(Vec::new()),
@@ -115,6 +133,10 @@ impl SongStore for InMemorySongStore {
                         era: song.era.clone(),
                         genre_tags: song.genre_tags.clone(),
                         youtube_id: song.youtube_id.clone(),
+                        album: song.album.clone(),
+                        year: song.year,
+                        cover_url: song.cover_url.clone(),
+                        cover_color: song.cover_color.clone(),
                         rating: r.rating,
                         note: r.note.clone(),
                         timestamp: r
