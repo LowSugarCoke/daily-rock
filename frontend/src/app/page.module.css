@@ -225,10 +225,10 @@
 
 .segment.segmentOn,
 .segment.segmentOn:hover {
-  background: #fff;
-  color: var(--text);
+  background: var(--accent);
+  color: #fff;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
 }
 
 .segment:disabled {
@@ -263,7 +263,7 @@
 }
 
 .noteInput:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent);
   outline-offset: 0;
 }
 
@@ -287,13 +287,12 @@
 }
 
 .submitButton {
-  align-self: flex-start;
   min-height: 48px;
   margin-top: 20px;
   padding: 0 28px;
   border: none;
   border-radius: 10px;
-  background: var(--ink);
+  background: var(--accent);
   color: #fff;
   font-size: 16px;
   font-weight: 600;
@@ -377,9 +376,5 @@
 
   .segment {
     font-size: 14px;
-  }
-
-  .submitButton {
-    align-self: stretch;
   }
 }

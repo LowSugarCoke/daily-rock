@@ -10,6 +10,8 @@
   --text-2: #4d4b47;
   --text-3: #66635e;
   --ink: #141414;
+  /* Cover colour darkened for white text; set with --cover. */
+  --accent: #2b2a28;
   --danger: #b3261e;
   --ok: #2f6b3a;
 
@@ -63,7 +65,7 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 

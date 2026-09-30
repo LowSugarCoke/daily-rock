@@ -103,6 +103,9 @@ describe("Home Component", () => {
     expect(document.documentElement.style.getPropertyValue("--cover")).toBe(
       "#eda273"
     );
+    expect(document.documentElement.style.getPropertyValue("--accent")).toMatch(
+      /^#[0-9a-f]{6}$/
+    );
   });
 
   test("embeds a YouTube player for the current song", async () => {

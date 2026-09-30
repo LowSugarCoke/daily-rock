@@ -5,7 +5,7 @@ import Image from "next/image";
 import styles from "./page.module.css";
 import type { Song } from "@/lib/types";
 import { RATING_WORDS } from "@/lib/rating";
-import { coverTint } from "@/lib/cover-tint";
+import { coverAccent, coverTint } from "@/lib/cover-tint";
 
 export default function Home() {
   const [song, setSong] = useState<Song | null>(null);
@@ -49,14 +49,17 @@ export default function Home() {
       });
   }, [fetchTrigger]);
 
-  // Tint the whole page with the current album's cover colour.
+  // Tint the page and colour the controls from the current album cover.
   useEffect(() => {
     const tint = song && coverTint(song.cover_color);
-    if (!tint) return;
+    const accent = song && coverAccent(song.cover_color);
+    if (!tint || !accent) return;
     const root = document.documentElement;
     root.style.setProperty("--cover", tint);
+    root.style.setProperty("--accent", accent);
     return () => {
       root.style.removeProperty("--cover");
+      root.style.removeProperty("--accent");
     };
   }, [song]);
 
