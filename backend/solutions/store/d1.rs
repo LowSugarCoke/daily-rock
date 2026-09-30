@@ -45,7 +45,7 @@ impl D1SongStore {
              FROM songs s \
              LEFT JOIN ratings r ON s.id = r.daily_selection_id \
              WHERE r.id IS NULL \
-             ORDER BY s.id ASC LIMIT 1",
+             ORDER BY CAST(s.id AS INTEGER) ASC LIMIT 1",
         );
         let d1_song = statement.first::<D1Song>(None).await.ok()??;
         let genre_tags: Vec<String> = serde_json::from_str(&d1_song.genre_tags).unwrap_or_default();
