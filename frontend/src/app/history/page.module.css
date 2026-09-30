@@ -144,128 +144,129 @@
   cursor: pointer;
 }
 
-/* List */
+/* Entries: covers taped onto the page like a scrapbook */
 .list {
   list-style: none;
-  margin-top: 16px;
-}
-
-.row {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) 96px 64px;
-  gap: 20px;
-  align-items: center;
-  padding: 14px 0;
-  border-top: 1px solid var(--line);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 48px 36px;
+  margin-top: 32px;
 }
 
-.row:last-child {
-  border-bottom: 1px solid var(--line);
-}
-
-.rowTaped {
-  position: relative;
-  display: block;
-  width: 64px;
-  transform: rotate(-3deg);
-}
-
-.row:nth-child(even) .rowTaped {
-  transform: rotate(2.5deg);
-}
-
-.rowTaped::after {
-  content: "";
-  position: absolute;
-  top: -6px;
-  left: 18px;
-  width: 30px;
-  height: 12px;
-  background: var(--tape);
-  transform: rotate(-6deg);
-}
-
-.rowCover {
-  display: block;
-  width: 64px;
-  height: 64px;
-  border-radius: 1px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.rowMain {
-  display: flex;
-  flex-direction: column;
+.entry {
   min-width: 0;
 }
 
-.rowTitle {
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+.entryLink {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-radius: 6px;
 }
 
-.rowArtist {
-  font-size: 15px;
-}
-
-.rowAlbum {
-  font-size: 14px;
-  color: var(--text-3);
-}
-
-.rowNote {
-  margin-top: 4px;
-  font-family: var(--font-hand);
-  font-size: 22px;
-  line-height: 1.2;
-  color: var(--pen);
-}
-
-.rowRating {
+.taped {
   position: relative;
-  justify-self: start;
-  padding: 6px 12px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.rowRating[data-rating="1"],
-.rowRating[data-rating="2"] {
-  font-weight: 400;
-  color: var(--text-2);
-}
-
-.penCircle {
-  position: absolute;
-  inset: 0;
+  display: block;
   width: 100%;
-  height: 100%;
-  overflow: visible;
-  pointer-events: none;
+  margin-bottom: 16px;
+  transform: rotate(-2.5deg);
+  transition: transform 180ms ease;
 }
 
-.penCircle path {
-  fill: none;
-  stroke: var(--pen);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.75;
+.entry:nth-child(3n + 2) .taped {
+  transform: rotate(2deg);
 }
 
-.rowDate {
-  justify-self: end;
-  padding: 2px 8px;
+.entry:nth-child(3n) .taped {
+  transform: rotate(-1deg);
+}
+
+.entryLink:hover .taped {
+  transform: rotate(0deg) translateY(-3px);
+}
+
+.taped::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 30%;
+  width: 40%;
+  height: 20px;
+  background: var(--tape);
+  transform: rotate(-4deg);
+}
+
+.cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 1px;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.16),
+    0 14px 24px -14px rgba(0, 0, 0, 0.4);
+}
+
+.stamp {
+  margin: 0 0 8px 2px;
+  padding: 1px 7px;
   border: 2px solid color-mix(in oklab, var(--text-2) 70%, transparent);
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-2);
-  white-space: nowrap;
-  transform: rotate(-6deg);
+  transform: rotate(-5deg);
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.entryLink:hover .title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.artist {
+  font-size: 15px;
+}
+
+.album {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.rating {
+  position: relative;
+  margin: 4px 0 0 -12px;
+  padding: 9px 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rating[data-rating="1"],
+.rating[data-rating="2"] {
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+.note {
+  margin-top: 2px;
+  font-family: var(--font-hand);
+  font-size: 21px;
+  line-height: 1.35;
+  /* Caveat's slant overhangs the glyph box; keep the last letter visible. */
+  padding: 0 6px 2px 0;
+  color: var(--pen);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .emptyState {
@@ -297,36 +298,13 @@
     grid-column: 1 / -1;
   }
 
-  .row {
-    grid-template-columns: 56px minmax(0, 1fr) auto;
-    grid-template-areas:
-      "cover main date"
-      "cover main rating";
-    gap: 2px 14px;
-    align-items: start;
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 36px 20px;
   }
 
-  .rowTaped {
-    grid-area: cover;
-    width: 56px;
-  }
-
-  .rowCover {
-    width: 56px;
-    height: 56px;
-  }
-
-  .rowMain {
-    grid-area: main;
-  }
-
-  .rowDate {
-    grid-area: date;
-  }
-
-  .rowRating {
-    grid-area: rating;
-    justify-self: end;
-    font-size: 14px;
+  .rating {
+    margin-left: -8px;
+    padding: 9px 8px;
   }
 }

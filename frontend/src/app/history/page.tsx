@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./page.module.css";
 import {
   computeAverageRating,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/history-stats";
 import type { HistoryItem } from "@/lib/types";
 import { ratingWord } from "@/lib/rating";
+import { PenCircle } from "@/components/Diary";
 
 const ALL = "";
 
@@ -211,43 +213,39 @@ export default function HistoryPage() {
                 {filteredItems.map((item) => {
                   const { day, month } = formatDayMonth(item.timestamp);
                   return (
-                    <li key={item.rating_id} className={styles.row}>
-                      <span className={styles.rowTaped}>
-                        <Image
-                          className={styles.rowCover}
-                          src={item.cover_url}
-                          alt={`${item.album} cover`}
-                          width={120}
-                          height={120}
-                        />
-                      </span>
-                      <div className={styles.rowMain}>
-                        <span className={styles.rowTitle}>{item.title}</span>
-                        <span className={styles.rowArtist}>{item.artist}</span>
-                        <span className={styles.rowAlbum}>
+                    <li key={item.rating_id} className={styles.entry}>
+                      <Link
+                        href={`/history/${item.rating_id}`}
+                        className={styles.entryLink}
+                      >
+                        <span className={styles.taped}>
+                          <Image
+                            className={styles.cover}
+                            src={item.cover_url}
+                            alt={`${item.album} cover`}
+                            width={300}
+                            height={300}
+                          />
+                        </span>
+                        <span className={styles.stamp}>
+                          {month} {Number(day)}
+                        </span>
+                        <span className={styles.title}>{item.title}</span>
+                        <span className={styles.artist}>{item.artist}</span>
+                        <span className={styles.album}>
                           {`${item.album}, ${item.year}`}
                         </span>
-                        {item.note && (
-                          <p className={styles.rowNote}>{item.note}</p>
-                        )}
-                      </div>
-                      <span
-                        className={styles.rowRating}
-                        data-rating={item.rating}
-                      >
-                        {ratingWord(item.rating)}
-                        <svg
-                          className={styles.penCircle}
-                          viewBox="0 0 100 40"
-                          preserveAspectRatio="none"
-                          aria-hidden="true"
+                        <span
+                          className={styles.rating}
+                          data-rating={item.rating}
                         >
-                          <path d="M6 24 C 8 6, 90 2, 95 18 C 99 34, 22 40, 8 30 C 2 24, 18 10, 52 8" />
-                        </svg>
-                      </span>
-                      <span className={styles.rowDate}>
-                        {month} {Number(day)}
-                      </span>
+                          {ratingWord(item.rating)}
+                          <PenCircle />
+                        </span>
+                        {item.note && (
+                          <span className={styles.note}>{item.note}</span>
+                        )}
+                      </Link>
                     </li>
                   );
                 })}

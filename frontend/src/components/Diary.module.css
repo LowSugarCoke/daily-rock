@@ -1,0 +1,148 @@
+/* Rating words; the chosen one is circled in pen */
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin: 0 0 26px -12px;
+}
+
+.word {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: none;
+  font-size: 17px;
+  color: var(--text-2);
+  transition: color 120ms ease;
+}
+
+.wordButton:not(:disabled):hover {
+  color: var(--text);
+}
+
+.word.wordOn {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.word:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.penCircle {
+  position: absolute;
+  inset: 2px -2px;
+  width: calc(100% + 4px);
+  height: calc(100% - 4px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.penCircle path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.wordButton {
+  cursor: pointer;
+}
+
+.penDraw path {
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
+  animation: draw 380ms ease-out forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Ruled index card */
+.card {
+  position: relative;
+  width: 100%;
+  background: var(--card);
+  transform: rotate(0.8deg);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 10px 20px -14px rgba(0, 0, 0, 0.4);
+}
+
+/* Rules sit just under each line of handwriting and scroll with the text. */
+.noteInput {
+  display: block;
+  width: 100%;
+  min-height: 150px;
+  padding: 12px 18px 28px;
+  border: none;
+  background: repeating-linear-gradient(
+      to bottom,
+      transparent 0 27px,
+      var(--card-rule) 27px 28px,
+      transparent 28px 32px
+    )
+    content-box;
+  background-attachment: local;
+  font-family: var(--font-hand);
+  font-size: 26px;
+  line-height: 32px;
+  color: var(--pen);
+  resize: vertical;
+}
+
+.noteInput::placeholder {
+  color: color-mix(in oklab, var(--pen) 45%, var(--card));
+}
+
+.noteInput:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.noteInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* A past note, read-only, on the same card */
+.handwritten {
+  min-height: 118px;
+  padding: 12px 18px 22px;
+  background: repeating-linear-gradient(
+      to bottom,
+      transparent 0 27px,
+      var(--card-rule) 27px 28px,
+      transparent 28px 32px
+    )
+    content-box;
+  font-family: var(--font-hand);
+  font-size: 26px;
+  line-height: 32px;
+  color: var(--pen);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.handwritten.empty {
+  color: color-mix(in oklab, var(--pen) 45%, var(--card));
+}
+
+@media (max-width: 680px) {
+  .words {
+    margin-left: -9px;
+  }
+
+  .word {
+    padding: 0 9px;
+    font-size: 16px;
+  }
+}

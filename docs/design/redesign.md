@@ -15,7 +15,8 @@ The first cover-led version looked too tidy, so you picked the "listening diary"
 - The date is a rubber stamp, and "Day N" is the song's place in the journey (its id).
 - The chosen rating is circled in pen, in the cover's accent colour.
 - Notes are handwritten (Caveat, the only extra font) on a ruled index card.
-- History matches: taped thumbnails, stamped dates, circled ratings, handwritten notes.
+- History is a scrapbook wall of taped covers. Each entry opens `/history/<ratingId>`, laid out like Today: play the song again, with your rating circled and your note on the card.
+- Shared pieces: `SongSpread` (cover, player, stamp, credits), `RatingScale` and `NoteCard` in `components/Diary.tsx`, and `useCoverTheme` for the tint and accent.
 
 ## Must keep (tests)
 Class names `songCard`, `songArtist`, `eraTag`, `genreTag` (span), and `statusBox` (+ `warning`/`error`). One `h1` "Daily Rock", an `h2` song title, "Rate this Song", `aria-label` "Rate N star(s)", the textarea placeholder "Add private notes...", the search placeholder "Search title or artist", and the labels "Songs Logged" / "Average Rating" / "Current Streak".

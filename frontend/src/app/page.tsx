@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import styles from "./page.module.css";
 import type { Song } from "@/lib/types";
-import { RATING_WORDS } from "@/lib/rating";
-import { coverAccent, coverTint } from "@/lib/cover-tint";
+import { useCoverTheme } from "@/lib/use-cover-theme";
+import SongSpread from "@/components/SongSpread";
+import { NoteCard, RatingScale, diaryStyles } from "@/components/Diary";
 
 export default function Home() {
   const [song, setSong] = useState<Song | null>(null);
@@ -49,19 +49,7 @@ export default function Home() {
       });
   }, [fetchTrigger]);
 
-  // Tint the page and colour the controls from the current album cover.
-  useEffect(() => {
-    const tint = song && coverTint(song.cover_color);
-    const accent = song && coverAccent(song.cover_color);
-    if (!tint || !accent) return;
-    const root = document.documentElement;
-    root.style.setProperty("--cover", tint);
-    root.style.setProperty("--accent", accent);
-    return () => {
-      root.style.removeProperty("--cover");
-      root.style.removeProperty("--accent");
-    };
-  }, [song]);
+  useCoverTheme(song?.cover_color);
 
   const handleSubmitRating = async () => {
     if (!song) return;
@@ -168,119 +156,54 @@ export default function Home() {
         )}
 
         {song && !loading && (
-          <article className={styles.songCard}>
-            <div className={styles.mediaCol}>
-              <div className={styles.taped}>
-                <Image
-                  className={styles.cover}
-                  src={song.cover_url}
-                  alt={`${song.album} cover`}
-                  width={600}
-                  height={600}
-                  priority
-                />
-                <span className={`${styles.tape} ${styles.tapeTop}`} />
-                <span className={`${styles.tape} ${styles.tapeBottom}`} />
-              </div>
-              <div className={styles.player}>
-                <iframe
-                  className={styles.playerFrame}
-                  src={`https://www.youtube-nocookie.com/embed/${song.youtube_id}`}
-                  title={`${song.title} - ${song.artist}`}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                />
-              </div>
-            </div>
+          <SongSpread
+            song={song}
+            stamp={`${stampDate} · Day ${Number(song.id)}`}
+          >
+            <section className={styles.ratingSection}>
+              <h3 className={styles.ratingTitle}>Rate this Song</h3>
+              <RatingScale
+                value={rating}
+                onChange={(value) => {
+                  setRating(value);
+                  setValidationError(null);
+                }}
+                disabled={submitting}
+              />
 
-            <div className={styles.infoCol}>
-              <div className={styles.heading}>
-                <p className={styles.stamp}>
-                  {`${stampDate} · Day ${Number(song.id)}`}
-                </p>
-                <h2 className={styles.songTitle}>{song.title}</h2>
-                <p className={styles.songArtist}>{song.artist}</p>
-                <p className={styles.album}>{`${song.album}, ${song.year}`}</p>
-                <p className={styles.tagsRow}>
-                  <span className={styles.eraTag}>{song.era}</span>
-                  {song.genre_tags.map((tag) => (
-                    <span key={tag} className={styles.genreTag}>
-                      {tag}
-                    </span>
-                  ))}
-                </p>
-              </div>
-
-              <section className={styles.ratingSection}>
-                <h3 className={styles.ratingTitle}>Rate this Song</h3>
-                <div className={styles.words} role="group" aria-label="Rating">
-                  {RATING_WORDS.map((word, index) => {
-                    const value = index + 1;
-                    const isOn = rating === value;
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        className={`${styles.word} ${isOn ? styles.wordOn : ""}`}
-                        onClick={() => {
-                          setRating(value);
-                          setValidationError(null);
-                        }}
-                        aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
-                        aria-pressed={isOn}
-                        disabled={submitting}
-                      >
-                        {word}
-                        {isOn && (
-                          <svg
-                            className={styles.penCircle}
-                            viewBox="0 0 100 40"
-                            preserveAspectRatio="none"
-                            aria-hidden="true"
-                          >
-                            <path d="M6 24 C 8 6, 90 2, 95 18 C 99 34, 22 40, 8 30 C 2 24, 18 10, 52 8" />
-                          </svg>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <label className={styles.noteLabel} htmlFor="song-note">
-                  Notes
-                </label>
-                <div className={styles.card}>
-                  <textarea
-                    id="song-note"
-                    className={styles.noteInput}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Add private notes about this song (optional)..."
-                    rows={4}
-                    disabled={submitting}
-                    maxLength={1024}
-                  />
-                  <span className={styles.noteCount}>{note.length} / 1024</span>
-                </div>
-
-                {validationError && (
-                  <p className={styles.validationError} role="alert">
-                    {validationError}
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  className={styles.submitButton}
-                  onClick={handleSubmitRating}
+              <label className={styles.noteLabel} htmlFor="song-note">
+                Notes
+              </label>
+              <NoteCard>
+                <textarea
+                  id="song-note"
+                  className={diaryStyles.noteInput}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Add private notes about this song (optional)..."
+                  rows={4}
                   disabled={submitting}
-                >
-                  {submitting ? "Submitting..." : "Submit Rating"}
-                </button>
-              </section>
-            </div>
-          </article>
+                  maxLength={1024}
+                />
+                <span className={styles.noteCount}>{note.length} / 1024</span>
+              </NoteCard>
+
+              {validationError && (
+                <p className={styles.validationError} role="alert">
+                  {validationError}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className={styles.submitButton}
+                onClick={handleSubmitRating}
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Submit Rating"}
+              </button>
+            </section>
+          </SongSpread>
         )}
       </main>
     </div>
