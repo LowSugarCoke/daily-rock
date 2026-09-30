@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import type { Song } from "@/lib/types";
-import { AlertIcon, CheckIcon, StarIcon } from "@/components/icons";
 
-const STAR_CAPTIONS = ["Skip", "Meh", "Good", "Great", "Classic"];
+const RATING_CAPTIONS = ["Skip", "Meh", "Good", "Great", "Classic"];
 
 export default function Home() {
   const [song, setSong] = useState<Song | null>(null);
@@ -106,7 +105,7 @@ export default function Home() {
     }
   };
 
-  const displayRating = hoverRating ?? rating ?? 0;
+  const displayRating = hoverRating ?? rating;
   const todayLabel = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -124,21 +123,19 @@ export default function Home() {
         <div className={styles.selectionSection}>
           {loading && !submitSuccess && (
             <div className={styles.statusBox}>
-              <span className={styles.spinner}></span>
+              <span className={styles.spinner} aria-hidden="true"></span>
               {"Loading today's selection..."}
             </div>
           )}
 
           {submitSuccess && (
             <div className={`${styles.statusBox} ${styles.success}`}>
-              <CheckIcon size={18} className={styles.statusIcon} />
               <span>Success! Loading next selection...</span>
             </div>
           )}
 
           {error && (
             <div className={`${styles.statusBox} ${styles.error}`}>
-              <AlertIcon size={18} className={styles.statusIcon} />
               <div className={styles.errorContent}>
                 <h3 className={styles.errorTitle}>
                   {"Failed to load today's selection"}
@@ -150,7 +147,6 @@ export default function Home() {
 
           {noSong && (
             <div className={`${styles.statusBox} ${styles.warning}`}>
-              <AlertIcon size={18} className={styles.statusIcon} />
               <div className={styles.warningContent}>
                 <h3 className={styles.warningTitle}>
                   No daily selection available
@@ -163,17 +159,18 @@ export default function Home() {
           )}
 
           {song && !loading && (
-            <div className={styles.songCard}>
-              <div className={styles.tagsRow}>
+            <article className={styles.songCard}>
+              <p className={styles.catalog}>No. {song.id.padStart(3, "0")}</p>
+              <h2 className={styles.songTitle}>{song.title}</h2>
+              <p className={styles.songArtist}>{song.artist}</p>
+              <p className={styles.tagsRow}>
                 <span className={styles.eraTag}>{song.era}</span>
                 {song.genre_tags.map((tag) => (
                   <span key={tag} className={styles.genreTag}>
                     {tag}
                   </span>
                 ))}
-              </div>
-              <h2 className={styles.songTitle}>{song.title}</h2>
-              <p className={styles.songArtist}>{song.artist}</p>
+              </p>
 
               <div className={styles.player}>
                 <iframe
@@ -186,40 +183,39 @@ export default function Home() {
                 />
               </div>
 
-              <div className={styles.ratingSection}>
+              <section className={styles.ratingSection}>
                 <div className={styles.ratingHead}>
                   <h3 className={styles.ratingTitle}>Rate this Song</h3>
                   <span className={styles.ratingHint}>
-                    {rating ? `${rating} / 5 selected` : "Select a rating"}
+                    {rating
+                      ? `${rating} / 5 - ${RATING_CAPTIONS[rating - 1]}`
+                      : "Tick one"}
                   </span>
                 </div>
 
-                <div className={styles.starContainer}>
-                  {[1, 2, 3, 4, 5].map((starValue) => {
-                    const isFilled = starValue <= displayRating;
+                <div className={styles.scale}>
+                  {[1, 2, 3, 4, 5].map((value) => {
+                    const isOn = displayRating === value;
                     return (
-                      <div key={starValue} className={styles.starWrap}>
-                        <button
-                          type="button"
-                          className={`${styles.starButton} ${isFilled ? styles.filled : ""}`}
-                          onClick={() => {
-                            setRating(starValue);
-                            setValidationError(null);
-                          }}
-                          onMouseEnter={() => setHoverRating(starValue)}
-                          onMouseLeave={() => setHoverRating(null)}
-                          aria-label={`Rate ${starValue} star${starValue > 1 ? "s" : ""}`}
-                          aria-pressed={rating === starValue}
-                          disabled={submitting}
-                        >
-                          <StarIcon size={30} filled={isFilled} />
-                        </button>
-                        <span
-                          className={`${styles.starCaption} ${isFilled ? styles.starCaptionOn : ""}`}
-                        >
-                          {STAR_CAPTIONS[starValue - 1]}
+                      <button
+                        key={value}
+                        type="button"
+                        className={`${styles.scaleBox} ${isOn ? styles.scaleBoxOn : ""}`}
+                        onClick={() => {
+                          setRating(value);
+                          setValidationError(null);
+                        }}
+                        onMouseEnter={() => setHoverRating(value)}
+                        onMouseLeave={() => setHoverRating(null)}
+                        aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
+                        aria-pressed={rating === value}
+                        disabled={submitting}
+                      >
+                        <span className={styles.scaleNumber}>{value}</span>
+                        <span className={styles.scaleCaption}>
+                          {RATING_CAPTIONS[value - 1]}
                         </span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -234,7 +230,7 @@ export default function Home() {
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Add private notes about this song (optional)..."
-                    rows={3}
+                    rows={4}
                     disabled={submitting}
                     maxLength={1024}
                   />
@@ -242,7 +238,9 @@ export default function Home() {
                 </div>
 
                 {validationError && (
-                  <p className={styles.validationError}>{validationError}</p>
+                  <p className={styles.validationError} role="alert">
+                    {validationError}
+                  </p>
                 )}
 
                 <button
@@ -251,10 +249,10 @@ export default function Home() {
                   onClick={handleSubmitRating}
                   disabled={submitting}
                 >
-                  {submitting ? "Submitting..." : "Submit Rating →"}
+                  {submitting ? "Submitting..." : "Submit Rating"}
                 </button>
-              </div>
-            </div>
+              </section>
+            </article>
           )}
         </div>
       </main>

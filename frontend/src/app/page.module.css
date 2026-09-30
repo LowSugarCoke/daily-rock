@@ -2,14 +2,14 @@
   display: flex;
   flex: 1;
   justify-content: center;
-  padding: 40px 24px 64px;
+  padding: 28px var(--gutter) 56px;
 }
 
 .main {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 600px;
+  max-width: var(--measure);
 }
 
 .heroRow {
@@ -17,20 +17,18 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 28px;
+  font-size: 13px;
 }
 
 .eyebrow {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-weight: 600;
   text-transform: uppercase;
-  color: var(--accent);
+  letter-spacing: 0.06em;
 }
 
 .dayLabel {
-  font-size: 14px;
-  color: var(--text-2);
+  color: var(--ink-2);
 }
 
 .selectionSection {
@@ -40,46 +38,29 @@
   gap: 16px;
 }
 
-/* Status boxes */
+/* Status */
 .statusBox {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  border-radius: var(--radius-md);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  font-size: 15px;
-  color: var(--text-2);
-}
-
-.statusIcon {
-  flex-shrink: 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  font-size: 14px;
+  color: var(--ink-2);
 }
 
 .statusBox.success {
-  color: var(--success);
-  border-color: rgba(74, 222, 128, 0.3);
+  color: var(--green);
+}
+
+.statusBox.error,
+.statusBox.warning {
+  align-items: flex-start;
 }
 
 .statusBox.error {
-  align-items: flex-start;
-  border-color: rgba(248, 113, 113, 0.35);
-}
-
-.statusBox.error .statusIcon {
-  color: var(--danger);
-  margin-top: 1px;
-}
-
-.statusBox.warning {
-  align-items: flex-start;
-  border-color: rgba(251, 191, 36, 0.3);
-}
-
-.statusBox.warning .statusIcon {
-  color: var(--warning);
-  margin-top: 1px;
+  border-color: var(--red);
 }
 
 .errorContent,
@@ -91,24 +72,28 @@
 
 .errorTitle,
 .warningTitle {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ink);
+}
+
+.errorTitle {
+  color: var(--red);
 }
 
 .errorMessage,
 .warningMessage {
   font-size: 14px;
-  color: var(--text-2);
+  color: var(--ink-2);
 }
 
 .spinner {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
-  border: 2px solid var(--border);
+  border: 2px solid var(--rule-soft);
+  border-top-color: var(--ink);
   border-radius: 50%;
-  border-top-color: var(--accent);
   animation: spin 0.9s linear infinite;
 }
 
@@ -118,70 +103,59 @@
   }
 }
 
-/* Song card */
+/* Sleeve */
 .songCard {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  padding: 28px;
-  border-radius: var(--radius-lg);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
 }
 
-.tagsRow {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-
-.eraTag,
-.genreTag {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
+.catalog {
   font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.eraTag {
-  background-color: var(--accent-wash);
-  color: var(--accent);
-}
-
-.genreTag {
-  background-color: var(--surface-2);
-  color: var(--text-2);
+  color: var(--red);
+  font-weight: 500;
+  margin-bottom: 6px;
 }
 
 .songTitle {
-  font-size: clamp(30px, 7vw, 40px);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(48px, 13vw, 84px);
+  line-height: 0.92;
+  text-transform: uppercase;
   text-wrap: balance;
-  color: var(--text);
-  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+  margin-bottom: 12px;
 }
 
 .songArtist {
   font-size: 18px;
   font-weight: 500;
-  color: var(--text-2);
+  margin-bottom: 4px;
+}
+
+.tagsRow {
+  font-size: 14px;
+  color: var(--ink-2);
   margin-bottom: 24px;
+}
+
+.eraTag,
+.genreTag {
+  white-space: nowrap;
+}
+
+.genreTag::before {
+  content: " / ";
+  white-space: pre;
+  color: var(--ink-3);
 }
 
 .player {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  margin-bottom: 28px;
-  background-color: #000;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  margin-bottom: 36px;
 }
 
 .playerFrame {
@@ -191,95 +165,96 @@
   border: 0;
 }
 
-/* Rating */
+/* Rating slip */
 .ratingSection {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  border-top: 4px solid var(--ink);
+  padding-top: 14px;
 }
 
 .ratingHead {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .ratingTitle {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .ratingHint {
-  font-size: 14px;
-  color: var(--text-3);
+  font-size: 13px;
+  color: var(--ink-2);
 }
 
-.starContainer {
-  display: flex;
-  justify-content: space-between;
-  max-width: 360px;
-  margin-bottom: 20px;
+.scale {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border: 1px solid var(--ink);
+  margin-bottom: 28px;
 }
 
-.starWrap {
+.scaleBox {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-}
-
-.starButton {
-  display: flex;
-  align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
+  gap: 2px;
+  min-height: 72px;
+  padding: 8px 2px;
   border: none;
-  border-radius: 50%;
-  background: none;
-  color: var(--star-off);
+  border-left: 1px solid var(--ink);
+  background: transparent;
   cursor: pointer;
   transition:
-    color var(--duration-fast) ease,
-    background-color var(--duration-fast) ease;
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
-.starButton:not(:disabled):hover {
-  background-color: var(--surface-2);
+.scaleBox:first-child {
+  border-left: none;
 }
 
-.starButton:not(:disabled):active {
-  background-color: var(--border);
+.scaleBox:not(:disabled):hover {
+  background: var(--paper-2);
 }
 
-.starButton.filled {
-  color: var(--accent);
+.scaleBox.scaleBoxOn,
+.scaleBox.scaleBoxOn:hover {
+  background: var(--ink);
+  color: var(--paper);
 }
 
-.starButton:disabled {
+.scaleBox:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
 
-.starCaption {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
+.scaleNumber {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1;
 }
 
-.starCaptionOn {
-  color: var(--accent);
+.scaleCaption {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .noteLabel {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-2);
-  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
 }
 
 .noteWrap {
@@ -289,23 +264,29 @@
 .noteInput {
   display: block;
   width: 100%;
-  padding: 12px 14px 28px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background-color: var(--surface-2);
-  color: var(--text);
+  padding: 0 0 28px;
+  border: none;
+  border-top: 1px solid var(--ink);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    var(--rule-soft) 31px,
+    var(--rule-soft) 32px
+  );
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 32px;
   resize: none;
-  transition: border-color var(--duration-fast) ease;
 }
 
 .noteInput::placeholder {
-  color: var(--text-3);
+  color: var(--ink-3);
+  font-style: italic;
 }
 
 .noteInput:focus-visible {
-  border-color: var(--accent);
+  outline: none;
+  border-top-color: var(--red);
 }
 
 .noteInput:disabled {
@@ -315,67 +296,57 @@
 
 .noteCount {
   position: absolute;
-  bottom: 8px;
-  right: 12px;
+  bottom: 4px;
+  right: 0;
   font-size: 12px;
-  color: var(--text-3);
+  color: var(--ink-3);
 }
 
 .validationError {
   font-size: 14px;
-  color: var(--danger);
+  color: var(--red);
   margin-top: 10px;
 }
 
 .submitButton {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100%;
-  height: 52px;
+  min-height: 56px;
   margin-top: 20px;
   border: none;
-  border-radius: var(--radius-sm);
-  background-color: var(--accent-strong);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background-color var(--duration-fast) ease;
+  transition: background-color 120ms ease;
 }
 
 .submitButton:not(:disabled):hover {
-  background-color: var(--accent-strong-hover);
-}
-
-.submitButton:not(:disabled):active {
-  opacity: 0.85;
+  background: var(--red);
 }
 
 .submitButton:disabled {
-  background-color: var(--surface-2);
-  color: var(--text-2);
+  background: var(--paper-2);
+  color: var(--ink-2);
   cursor: not-allowed;
 }
 
 @media (max-width: 640px) {
-  .page {
-    padding: 20px 16px 32px;
-  }
-
-  .songCard {
-    padding: 0;
-    border: none;
-    background: none;
-  }
-
   .player {
-    width: calc(100% + 32px);
-    margin: 0 -16px 24px;
-    border-radius: 0;
+    width: calc(100% + 2 * var(--gutter));
+    margin-left: calc(-1 * var(--gutter));
+    border-left: none;
+    border-right: none;
   }
 
-  .starContainer {
-    max-width: none;
+  .scaleBox {
+    min-height: 64px;
+  }
+
+  .scaleCaption {
+    font-size: 11px;
+    letter-spacing: 0;
   }
 }

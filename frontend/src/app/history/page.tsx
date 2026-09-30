@@ -8,7 +8,6 @@ import {
   formatDayMonth,
 } from "@/lib/history-stats";
 import type { HistoryItem } from "@/lib/types";
-import { SearchIcon, StarIcon, XIcon } from "@/components/icons";
 
 const ALL = "";
 
@@ -92,7 +91,7 @@ export default function HistoryPage() {
 
         {loading && (
           <div className={styles.statusBox}>
-            <span className={styles.spinner}></span>
+            <span className={styles.spinner} aria-hidden="true"></span>
             Loading your history...
           </div>
         )}
@@ -105,35 +104,29 @@ export default function HistoryPage() {
 
         {!loading && !error && (
           <>
-            <div className={styles.statRow}>
+            <dl className={styles.statRow}>
               <div className={styles.statTile}>
-                <div className={styles.statLabel}>Songs Logged</div>
-                <div className={styles.statValue}>{songsLogged}</div>
+                <dt className={styles.statLabel}>Songs Logged</dt>
+                <dd className={styles.statValue}>{songsLogged}</dd>
               </div>
               <div className={styles.statTile}>
-                <div className={styles.statLabel}>Average Rating</div>
-                <div className={styles.statValue}>
-                  {averageRating}{" "}
-                  <small>
-                    <StarIcon size={16} filled className={styles.statStar} />
-                  </small>
-                </div>
+                <dt className={styles.statLabel}>Average Rating</dt>
+                <dd className={styles.statValue}>
+                  {averageRating} <small>/ 5</small>
+                </dd>
               </div>
               <div className={styles.statTile}>
-                <div className={styles.statLabel}>Current Streak</div>
-                <div className={styles.statValue}>
+                <dt className={styles.statLabel}>Current Streak</dt>
+                <dd className={styles.statValue}>
                   {currentStreak}{" "}
                   <small>{currentStreak === 1 ? "day" : "days"}</small>
-                </div>
+                </dd>
               </div>
-            </div>
+            </dl>
 
             <div className={styles.filterBar}>
               <label className={styles.searchWrap}>
-                <span className={styles.filterFieldLabel}>
-                  Search title or artist
-                </span>
-                <SearchIcon size={18} className={styles.searchIcon} />
+                <span className={styles.filterFieldLabel}>Search</span>
                 <input
                   type="search"
                   className={styles.filterSearch}
@@ -150,7 +143,7 @@ export default function HistoryPage() {
                   value={era}
                   onChange={(e) => setEra(e.target.value)}
                 >
-                  <option value={ALL}>All eras</option>
+                  <option value={ALL}>All</option>
                   {eraOptions.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -166,7 +159,7 @@ export default function HistoryPage() {
                   value={genre}
                   onChange={(e) => setGenre(e.target.value)}
                 >
-                  <option value={ALL}>All genres</option>
+                  <option value={ALL}>All</option>
                   {genreOptions.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -182,7 +175,7 @@ export default function HistoryPage() {
                   value={artist}
                   onChange={(e) => setArtist(e.target.value)}
                 >
-                  <option value={ALL}>All artists</option>
+                  <option value={ALL}>All</option>
                   {artistOptions.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -190,29 +183,29 @@ export default function HistoryPage() {
                   ))}
                 </select>
               </label>
-
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  className={styles.clearFilters}
-                  onClick={() => {
-                    setSearch("");
-                    setEra(ALL);
-                    setGenre(ALL);
-                    setArtist(ALL);
-                  }}
-                >
-                  Clear filters <XIcon size={16} />
-                </button>
-              )}
             </div>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className={styles.clearFilters}
+                onClick={() => {
+                  setSearch("");
+                  setEra(ALL);
+                  setGenre(ALL);
+                  setArtist(ALL);
+                }}
+              >
+                Clear filters
+              </button>
+            )}
 
             {filteredItems.length === 0 ? (
               <div className={styles.emptyState}>
-                No results for the current filters — clear a filter to see more.
+                No results for the current filters. Clear a filter to see more.
               </div>
             ) : (
-              <ul className={styles.list}>
+              <ol className={styles.list}>
                 {filteredItems.map((item) => {
                   const { day, month } = formatDayMonth(item.timestamp);
                   return (
@@ -237,9 +230,9 @@ export default function HistoryPage() {
                           ))}
                         </div>
                         {item.note && (
-                          <div className={styles.rowNote}>
+                          <p className={styles.rowNote}>
                             &ldquo;{item.note}&rdquo;
-                          </div>
+                          </p>
                         )}
                       </div>
                       <div
@@ -247,13 +240,11 @@ export default function HistoryPage() {
                         role="img"
                         aria-label={`Rated ${item.rating} out of 5`}
                       >
-                        {[1, 2, 3, 4, 5].map((starValue) => (
-                          <StarIcon
-                            key={starValue}
-                            size={16}
-                            filled={starValue <= item.rating}
-                            className={`${styles.rowStar} ${
-                              starValue <= item.rating ? styles.rowStarOn : ""
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <span
+                            key={value}
+                            className={`${styles.rowTick} ${
+                              value <= item.rating ? styles.rowTickOn : ""
                             }`}
                           />
                         ))}
@@ -261,7 +252,7 @@ export default function HistoryPage() {
                     </li>
                   );
                 })}
-              </ul>
+              </ol>
             )}
           </>
         )}

@@ -6,11 +6,10 @@ import { usePathname } from "next/navigation";
 import styles from "./AppShell.module.css";
 import { computeCurrentStreak } from "@/lib/history-stats";
 import type { HistoryItem } from "@/lib/types";
-import { DiscIcon, FlameIcon, HistoryIcon } from "./icons";
 
 const TABS = [
-  { href: "/", label: "Today", Icon: DiscIcon },
-  { href: "/history", label: "History", Icon: HistoryIcon },
+  { href: "/", label: "Today" },
+  { href: "/history", label: "History" },
 ] as const;
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -34,19 +33,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.shell}>
-      <nav className={styles.nav}>
-        <div className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true" />
+      <header className={styles.masthead}>
+        <div className={styles.mastRow}>
           <h1 className={styles.brandWord}>Daily Rock</h1>
+          {streak !== null && streak > 0 && (
+            <span className={styles.streak}>
+              <span className={styles.streakValue}>{streak}</span> day streak
+            </span>
+          )}
         </div>
-        {streak !== null && streak > 0 && (
-          <span className={styles.streak}>
-            <FlameIcon size={16} className={styles.streakIcon} />
-            <span className={styles.streakValue}>{streak}</span>&nbsp;day streak
-          </span>
-        )}
-        <div className={styles.tabs}>
-          {TABS.map(({ href, label, Icon }) => {
+        <nav className={styles.tabs} aria-label="Main">
+          {TABS.map(({ href, label }) => {
             const isActive =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
@@ -56,13 +53,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 aria-current={isActive ? "page" : undefined}
                 className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
               >
-                <Icon size={20} className={styles.tabIcon} />
-                <span>{label}</span>
+                {label}
               </Link>
             );
           })}
-        </div>
-      </nav>
+          <span className={styles.tagline}>One song a day</span>
+        </nav>
+      </header>
       <div className={styles.body}>{children}</div>
     </div>
   );

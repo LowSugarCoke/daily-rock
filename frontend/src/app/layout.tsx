@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit } from "next/font/google";
+import { Anton, IBM_Plex_Mono } from "next/font/google";
 import AppShell from "@/components/AppShell";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const anton = Anton({
+  variable: "--font-anton",
   subsets: ["latin"],
+  weight: "400",
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -15,18 +23,17 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Daily Rock",
-    statusBarStyle: "black",
+    statusBarStyle: "default",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0b",
-  viewportFit: "cover",
+  themeColor: "#f2eee5",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={outfit.variable}>
+    <html lang="en" className={`${anton.variable} ${plexMono.variable}`}>
       <body>
         <AppShell>{children}</AppShell>
       </body>

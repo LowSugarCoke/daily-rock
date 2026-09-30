@@ -3,124 +3,80 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg);
 }
 
-.nav {
-  position: sticky;
-  top: 0;
-  z-index: 20;
+.masthead {
+  width: 100%;
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: 20px var(--gutter) 0;
+}
+
+.mastRow {
   display: flex;
-  align-items: center;
-  gap: 20px;
-  height: var(--nav-height);
-  padding: 0 24px;
-  background-color: rgba(10, 10, 11, 0.85);
-  backdrop-filter: saturate(160%) blur(14px);
-  -webkit-backdrop-filter: saturate(160%) blur(14px);
-  border-bottom: 1px solid var(--border);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-right: auto;
-}
-
-.brandMark {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  position: relative;
-  background:
-    repeating-radial-gradient(
-      circle at 50% 50%,
-      rgba(255, 255, 255, 0.05) 0 1px,
-      transparent 1px 3px
-    ),
-    radial-gradient(circle at 35% 30%, #3a3a3e, #0d0d0f 70%);
-  box-shadow: 0 0 0 1px var(--border);
-}
-
-.brandMark::after {
-  content: "";
-  position: absolute;
-  inset: 38%;
-  border-radius: 50%;
-  background-color: var(--accent);
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 4px solid var(--ink);
 }
 
 .brandWord {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 44px;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
-  color: var(--text);
 }
 
 .streak {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-2);
+  font-size: 13px;
+  color: var(--ink-2);
   white-space: nowrap;
-}
-
-.streakIcon {
-  color: var(--accent);
-  margin-right: 2px;
+  padding-bottom: 2px;
 }
 
 .streakValue {
-  color: var(--text);
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--red);
 }
 
 .tabs {
   display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
+  align-items: stretch;
+  gap: 24px;
+  border-bottom: 1px solid var(--ink);
 }
 
 .tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 16px;
-  border-radius: 999px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-2);
-  transition:
-    color var(--duration-fast) ease,
-    background-color var(--duration-fast) ease;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
 }
 
 .tab:hover {
-  color: var(--text);
+  color: var(--ink);
 }
 
-.tabActive,
-.tabActive:hover {
-  background-color: var(--surface-2);
-  color: var(--text);
+.tabActive {
+  color: var(--ink);
+  border-bottom-color: var(--red);
 }
 
-.tabActive .tabIcon {
-  color: var(--accent);
+.tagline {
+  margin-left: auto;
+  align-self: center;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-3);
 }
 
 .body {
@@ -130,49 +86,11 @@
 }
 
 @media (max-width: 640px) {
-  .nav {
-    padding: 0 16px;
-    height: 56px;
-  }
-
   .brandWord {
-    font-size: 16px;
+    font-size: 36px;
   }
 
-  .tabs {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 30;
-    justify-content: space-around;
-    gap: 0;
-    height: calc(var(--tabbar-height) + var(--safe-bottom));
-    padding: 0 16px var(--safe-bottom);
-    border-radius: 0;
-    border: none;
-    border-top: 1px solid var(--border);
-    background-color: rgba(10, 10, 11, 0.92);
-    backdrop-filter: saturate(160%) blur(14px);
-    -webkit-backdrop-filter: saturate(160%) blur(14px);
-  }
-
-  .tab {
-    flex: 1;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-    min-height: 48px;
-    font-size: 12px;
-    background: none;
-  }
-
-  .tabActive,
-  .tabActive:hover {
-    background: none;
-  }
-
-  .body {
-    padding-bottom: calc(var(--tabbar-height) + var(--safe-bottom));
+  .tagline {
+    display: none;
   }
 }
