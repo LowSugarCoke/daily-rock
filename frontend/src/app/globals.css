@@ -18,6 +18,11 @@
   --font:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
+  --font-hand: var(--font-caveat), "Segoe Print", cursive;
+  --pen: #2a3a6b;
+  --card: #fffdf7;
+  --card-rule: #cfe0ea;
+  --tape: rgba(250, 244, 222, 0.72);
 }
 
 html {

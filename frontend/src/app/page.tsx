@@ -118,9 +118,8 @@ export default function Home() {
     }
   };
 
-  const todayLabel = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
+  const stampDate = new Date().toLocaleDateString("en-US", {
+    month: "short",
     day: "numeric",
   });
 
@@ -129,7 +128,6 @@ export default function Home() {
       <main className={styles.main}>
         <p className={styles.heroRow}>
           <span className={styles.eyebrow}>Today&apos;s Selection</span>
-          <span className={styles.dayLabel}>{todayLabel}</span>
         </p>
 
         {loading && !submitSuccess && (
@@ -172,14 +170,18 @@ export default function Home() {
         {song && !loading && (
           <article className={styles.songCard}>
             <div className={styles.mediaCol}>
-              <Image
-                className={styles.cover}
-                src={song.cover_url}
-                alt={`${song.album} cover`}
-                width={600}
-                height={600}
-                priority
-              />
+              <div className={styles.taped}>
+                <Image
+                  className={styles.cover}
+                  src={song.cover_url}
+                  alt={`${song.album} cover`}
+                  width={600}
+                  height={600}
+                  priority
+                />
+                <span className={`${styles.tape} ${styles.tapeTop}`} />
+                <span className={`${styles.tape} ${styles.tapeBottom}`} />
+              </div>
               <div className={styles.player}>
                 <iframe
                   className={styles.playerFrame}
@@ -194,6 +196,9 @@ export default function Home() {
 
             <div className={styles.infoCol}>
               <div className={styles.heading}>
+                <p className={styles.stamp}>
+                  {`${stampDate} · Day ${Number(song.id)}`}
+                </p>
                 <h2 className={styles.songTitle}>{song.title}</h2>
                 <p className={styles.songArtist}>{song.artist}</p>
                 <p className={styles.album}>{`${song.album}, ${song.year}`}</p>
@@ -209,11 +214,7 @@ export default function Home() {
 
               <section className={styles.ratingSection}>
                 <h3 className={styles.ratingTitle}>Rate this Song</h3>
-                <div
-                  className={styles.segmented}
-                  role="group"
-                  aria-label="Rating"
-                >
+                <div className={styles.words} role="group" aria-label="Rating">
                   {RATING_WORDS.map((word, index) => {
                     const value = index + 1;
                     const isOn = rating === value;
@@ -221,7 +222,7 @@ export default function Home() {
                       <button
                         key={value}
                         type="button"
-                        className={`${styles.segment} ${isOn ? styles.segmentOn : ""}`}
+                        className={`${styles.word} ${isOn ? styles.wordOn : ""}`}
                         onClick={() => {
                           setRating(value);
                           setValidationError(null);
@@ -231,6 +232,16 @@ export default function Home() {
                         disabled={submitting}
                       >
                         {word}
+                        {isOn && (
+                          <svg
+                            className={styles.penCircle}
+                            viewBox="0 0 100 40"
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                          >
+                            <path d="M6 24 C 8 6, 90 2, 95 18 C 99 34, 22 40, 8 30 C 2 24, 18 10, 52 8" />
+                          </svg>
+                        )}
                       </button>
                     );
                   })}
@@ -239,7 +250,7 @@ export default function Home() {
                 <label className={styles.noteLabel} htmlFor="song-note">
                   Notes
                 </label>
-                <div className={styles.noteWrap}>
+                <div className={styles.card}>
                   <textarea
                     id="song-note"
                     className={styles.noteInput}

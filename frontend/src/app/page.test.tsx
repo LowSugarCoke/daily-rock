@@ -90,6 +90,20 @@ describe("Home Component", () => {
     expect(screen.getByAltText("Berry Is On Top cover")).toBeInTheDocument();
   });
 
+  test("stamps the date and which day of the journey this song is", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    expect(
+      await screen.findByText(/^[A-Z][a-z]{2} \d{1,2} · Day 1$/)
+    ).toBeInTheDocument();
+  });
+
   test("tints the page with the cover colour", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,

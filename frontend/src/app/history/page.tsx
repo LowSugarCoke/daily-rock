@@ -212,13 +212,15 @@ export default function HistoryPage() {
                   const { day, month } = formatDayMonth(item.timestamp);
                   return (
                     <li key={item.rating_id} className={styles.row}>
-                      <Image
-                        className={styles.rowCover}
-                        src={item.cover_url}
-                        alt={`${item.album} cover`}
-                        width={120}
-                        height={120}
-                      />
+                      <span className={styles.rowTaped}>
+                        <Image
+                          className={styles.rowCover}
+                          src={item.cover_url}
+                          alt={`${item.album} cover`}
+                          width={120}
+                          height={120}
+                        />
+                      </span>
                       <div className={styles.rowMain}>
                         <span className={styles.rowTitle}>{item.title}</span>
                         <span className={styles.rowArtist}>{item.artist}</span>
@@ -234,6 +236,14 @@ export default function HistoryPage() {
                         data-rating={item.rating}
                       >
                         {ratingWord(item.rating)}
+                        <svg
+                          className={styles.penCircle}
+                          viewBox="0 0 100 40"
+                          preserveAspectRatio="none"
+                          aria-hidden="true"
+                        >
+                          <path d="M6 24 C 8 6, 90 2, 95 18 C 99 34, 22 40, 8 30 C 2 24, 18 10, 52 8" />
+                        </svg>
                       </span>
                       <span className={styles.rowDate}>
                         {month} {Number(day)}

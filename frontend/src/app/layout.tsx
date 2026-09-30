@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Caveat } from "next/font/google";
 import AppShell from "@/components/AppShell";
 import "./globals.css";
+
+// Handwriting, used only for the listening notes.
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["500", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Daily Rock",
@@ -19,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en">
+    <html lang="en" className={caveat.variable}>
       <body>
         <AppShell>{children}</AppShell>
       </body>
