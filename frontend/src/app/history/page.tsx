@@ -14,7 +14,6 @@ import { ratingWord } from "@/lib/rating";
 import { PenCircle } from "@/components/Diary";
 
 const ALL = "";
-const GENRES_SHOWN = 12;
 
 // Genres ordered by how often you've heard them, so the ones you know best
 // come first; ties sort by name.
@@ -44,7 +43,6 @@ export default function HistoryPage() {
   const [search, setSearch] = useState<string>("");
   const [era, setEra] = useState<string>(ALL);
   const [genre, setGenre] = useState<string>(ALL);
-  const [showAllGenres, setShowAllGenres] = useState<boolean>(false);
 
   useEffect(() => {
     fetch("/api/history")
@@ -69,13 +67,6 @@ export default function HistoryPage() {
     [items]
   );
   const genreOptions = useMemo(() => genresByCount(items), [items]);
-  const visibleGenres =
-    showAllGenres || genreOptions.length <= GENRES_SHOWN
-      ? genreOptions
-      : genreOptions.filter(
-          (g, index) => index < GENRES_SHOWN || g.name === genre
-        );
-  const hiddenGenreCount = genreOptions.length - visibleGenres.length;
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -140,43 +131,45 @@ export default function HistoryPage() {
             </dl>
 
             <div className={styles.filters}>
-              <label className={styles.search}>
-                <span className={styles.filterName}>Search</span>
-                <input
-                  type="search"
-                  className={styles.searchInput}
-                  placeholder="Title, artist, album or genre"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </label>
+              <div className={styles.filterTop}>
+                <label className={styles.search}>
+                  <span className={styles.filterName}>Search</span>
+                  <input
+                    type="search"
+                    className={styles.searchInput}
+                    placeholder="Title, artist, album or genre"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </label>
 
-              <div className={styles.filterRow} role="group" aria-label="Era">
-                <span className={styles.filterName}>Era</span>
-                <div className={styles.eras}>
-                  {[ALL, ...eraOptions].map((option) => {
-                    const isOn = era === option;
-                    return (
-                      <button
-                        key={option || "all"}
-                        type="button"
-                        className={`${styles.era} ${isOn ? styles.eraOn : ""}`}
-                        aria-pressed={isOn}
-                        aria-label={option || "All eras"}
-                        onClick={() => setEra(option)}
-                      >
-                        {option || "All"}
-                        {isOn && <PenCircle />}
-                      </button>
-                    );
-                  })}
+                <div className={styles.filterRow} role="group" aria-label="Era">
+                  <span className={styles.filterName}>Era</span>
+                  <div className={styles.eras}>
+                    {[ALL, ...eraOptions].map((option) => {
+                      const isOn = era === option;
+                      return (
+                        <button
+                          key={option || "all"}
+                          type="button"
+                          className={`${styles.era} ${isOn ? styles.eraOn : ""}`}
+                          aria-pressed={isOn}
+                          aria-label={option || "All eras"}
+                          onClick={() => setEra(option)}
+                        >
+                          {option || "All"}
+                          {isOn && <PenCircle />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
               <div className={styles.filterRow} role="group" aria-label="Genre">
                 <span className={styles.filterName}>Genre</span>
                 <div className={styles.genres}>
-                  {visibleGenres.map(({ name, count }) => {
+                  {genreOptions.map(({ name, count }) => {
                     const isOn = genre === name;
                     return (
                       <button
@@ -194,15 +187,6 @@ export default function HistoryPage() {
                       </button>
                     );
                   })}
-                  {hiddenGenreCount > 0 && (
-                    <button
-                      type="button"
-                      className={styles.moreGenres}
-                      onClick={() => setShowAllGenres(true)}
-                    >
-                      {`+${hiddenGenreCount} more`}
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
