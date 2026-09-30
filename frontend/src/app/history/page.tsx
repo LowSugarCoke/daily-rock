@@ -8,6 +8,7 @@ import {
   formatDayMonth,
 } from "@/lib/history-stats";
 import type { HistoryItem } from "@/lib/types";
+import { SearchIcon, StarIcon, XIcon } from "@/components/icons";
 
 const ALL = "";
 
@@ -112,25 +113,35 @@ export default function HistoryPage() {
               <div className={styles.statTile}>
                 <div className={styles.statLabel}>Average Rating</div>
                 <div className={styles.statValue}>
-                  {averageRating} <small>★</small>
+                  {averageRating}{" "}
+                  <small>
+                    <StarIcon size={16} filled className={styles.statStar} />
+                  </small>
                 </div>
               </div>
               <div className={styles.statTile}>
                 <div className={styles.statLabel}>Current Streak</div>
                 <div className={styles.statValue}>
-                  {currentStreak} <small>days</small>
+                  {currentStreak}{" "}
+                  <small>{currentStreak === 1 ? "day" : "days"}</small>
                 </div>
               </div>
             </div>
 
             <div className={styles.filterBar}>
-              <input
-                type="search"
-                className={styles.filterSearch}
-                placeholder="Search title or artist…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              <label className={styles.searchWrap}>
+                <span className={styles.filterFieldLabel}>
+                  Search title or artist
+                </span>
+                <SearchIcon size={18} className={styles.searchIcon} />
+                <input
+                  type="search"
+                  className={styles.filterSearch}
+                  placeholder="Search title or artist…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </label>
 
               <label className={styles.filterField}>
                 <span className={styles.filterFieldLabel}>Era</span>
@@ -191,7 +202,7 @@ export default function HistoryPage() {
                     setArtist(ALL);
                   }}
                 >
-                  Clear filters ×
+                  Clear filters <XIcon size={16} />
                 </button>
               )}
             </div>
@@ -231,16 +242,20 @@ export default function HistoryPage() {
                           </div>
                         )}
                       </div>
-                      <div className={styles.rowRating}>
+                      <div
+                        className={styles.rowRating}
+                        role="img"
+                        aria-label={`Rated ${item.rating} out of 5`}
+                      >
                         {[1, 2, 3, 4, 5].map((starValue) => (
-                          <span
+                          <StarIcon
                             key={starValue}
+                            size={16}
+                            filled={starValue <= item.rating}
                             className={`${styles.rowStar} ${
                               starValue <= item.rating ? styles.rowStarOn : ""
                             }`}
-                          >
-                            ★
-                          </span>
+                          />
                         ))}
                       </div>
                     </li>

@@ -1,4 +1,4 @@
-# Redesign spec (in progress)
+# Redesign spec
 
 Source: ui-ux-pro-max skill searches (color "music streaming player", style "music streaming dark immersive", typography "rock music bold editorial"). The generated `--design-system` suggested scroll storytelling and an indigo accent, which were rejected: they fit landing pages, not a two-page daily app.
 

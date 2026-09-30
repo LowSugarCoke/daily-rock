@@ -6,10 +6,11 @@ import { usePathname } from "next/navigation";
 import styles from "./AppShell.module.css";
 import { computeCurrentStreak } from "@/lib/history-stats";
 import type { HistoryItem } from "@/lib/types";
+import { DiscIcon, FlameIcon, HistoryIcon } from "./icons";
 
 const TABS = [
-  { href: "/", label: "Today" },
-  { href: "/history", label: "History" },
+  { href: "/", label: "Today", Icon: DiscIcon },
+  { href: "/history", label: "History", Icon: HistoryIcon },
 ] as const;
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -38,30 +39,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <span className={styles.brandMark} aria-hidden="true" />
           <h1 className={styles.brandWord}>Daily Rock</h1>
         </div>
+        {streak !== null && streak > 0 && (
+          <span className={styles.streak}>
+            <FlameIcon size={16} className={styles.streakIcon} />
+            <span className={styles.streakValue}>{streak}</span>&nbsp;day streak
+          </span>
+        )}
         <div className={styles.tabs}>
-          {TABS.map((tab) => {
+          {TABS.map(({ href, label, Icon }) => {
             const isActive =
-              tab.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(tab.href);
+              href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
               <Link
-                key={tab.href}
-                href={tab.href}
+                key={href}
+                href={href}
                 aria-current={isActive ? "page" : undefined}
                 className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
               >
-                {tab.label}
+                <Icon size={20} className={styles.tabIcon} />
+                <span>{label}</span>
               </Link>
             );
           })}
         </div>
-        {streak !== null && streak > 0 && (
-          <span className={styles.streak}>
-            🔥 <span className={styles.streakValue}>{streak}</span>&nbsp;day
-            streak
-          </span>
-        )}
       </nav>
       <div className={styles.body}>{children}</div>
     </div>

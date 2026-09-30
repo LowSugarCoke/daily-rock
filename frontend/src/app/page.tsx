@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import type { Song } from "@/lib/types";
+import { AlertIcon, CheckIcon, StarIcon } from "@/components/icons";
 
 const STAR_CAPTIONS = ["Skip", "Meh", "Good", "Great", "Classic"];
 
@@ -130,17 +131,14 @@ export default function Home() {
 
           {submitSuccess && (
             <div className={`${styles.statusBox} ${styles.success}`}>
-              <span className={styles.spinner}></span>
+              <CheckIcon size={18} className={styles.statusIcon} />
               <span>Success! Loading next selection...</span>
             </div>
           )}
 
           {error && (
             <div className={`${styles.statusBox} ${styles.error}`}>
-              <span
-                className={styles.statusDot}
-                style={{ backgroundColor: "#ff4d4f" }}
-              ></span>
+              <AlertIcon size={18} className={styles.statusIcon} />
               <div className={styles.errorContent}>
                 <h3 className={styles.errorTitle}>
                   {"Failed to load today's selection"}
@@ -152,10 +150,7 @@ export default function Home() {
 
           {noSong && (
             <div className={`${styles.statusBox} ${styles.warning}`}>
-              <span
-                className={styles.statusDot}
-                style={{ backgroundColor: "#faad14" }}
-              ></span>
+              <AlertIcon size={18} className={styles.statusIcon} />
               <div className={styles.warningContent}>
                 <h3 className={styles.warningTitle}>
                   No daily selection available
@@ -214,9 +209,10 @@ export default function Home() {
                           onMouseEnter={() => setHoverRating(starValue)}
                           onMouseLeave={() => setHoverRating(null)}
                           aria-label={`Rate ${starValue} star${starValue > 1 ? "s" : ""}`}
+                          aria-pressed={rating === starValue}
                           disabled={submitting}
                         >
-                          ★
+                          <StarIcon size={30} filled={isFilled} />
                         </button>
                         <span
                           className={`${styles.starCaption} ${isFilled ? styles.starCaptionOn : ""}`}
@@ -228,8 +224,12 @@ export default function Home() {
                   })}
                 </div>
 
+                <label className={styles.noteLabel} htmlFor="song-note">
+                  Notes
+                </label>
                 <div className={styles.noteWrap}>
                   <textarea
+                    id="song-note"
                     className={styles.noteInput}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}

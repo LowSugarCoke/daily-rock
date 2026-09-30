@@ -2,7 +2,7 @@
   display: flex;
   flex: 1;
   justify-content: center;
-  padding: 32px 20px 64px;
+  padding: 40px 24px 64px;
 }
 
 .main {
@@ -13,21 +13,21 @@
 }
 
 .head {
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .heading {
-  font-size: 24px;
+  font-size: clamp(28px, 6vw, 36px);
   font-weight: 800;
-  letter-spacing: -0.4px;
-  color: var(--text-primary);
-  margin: 0 0 4px 0;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 6px;
 }
 
 .subheading {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0;
+  font-size: 15px;
+  color: var(--text-2);
 }
 
 .statusBox {
@@ -35,25 +35,26 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  border-radius: var(--radius-sm);
-  background-color: var(--status-box-bg);
-  border: 1px solid var(--border-color);
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 15px;
+  color: var(--text-2);
 }
 
 .statusBox.error {
-  border-color: rgba(255, 77, 79, 0.3);
-  background-color: rgba(255, 77, 79, 0.05);
-  color: #ff4d4f;
+  border-color: rgba(248, 113, 113, 0.35);
+  color: var(--danger);
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--spinner-border);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
   border-radius: 50%;
-  border-top-color: var(--accent-color);
-  animation: spin 1s linear infinite;
+  border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
 }
 
 @keyframes spin {
@@ -62,78 +63,97 @@
   }
 }
 
+/* Stats */
 .statRow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 22px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .statTile {
-  background-color: var(--foreground);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 16px 18px;
   min-width: 0;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
 }
 
 .statLabel {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-tertiary);
+  color: var(--text-3);
   margin-bottom: 6px;
 }
 
 .statValue {
-  font-size: 22px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 30px;
   font-weight: 800;
-  letter-spacing: -0.4px;
-  color: var(--text-primary);
+  line-height: 1.1;
+  color: var(--text);
 }
 
 .statValue small {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-2);
 }
 
-@media (max-width: 560px) {
-  .statRow {
-    grid-template-columns: 1fr 1fr;
-  }
+.statStar {
+  color: var(--accent);
+  vertical-align: -1px;
 }
 
+/* Filters */
 .filterBar {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+}
+
+.searchWrap {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  pointer-events: none;
 }
 
 .filterSearch {
-  flex: 1 1 200px;
-  min-width: 0;
-  height: 38px;
+  width: 100%;
+  height: 44px;
+  padding: 0 16px 0 42px;
   border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background-color: var(--foreground);
-  padding: 0 16px;
-  font-size: 13px;
-  color: var(--text-primary);
-  outline: none;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text);
+  font-size: 16px;
 }
 
-.filterSearch:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px var(--input-focus-shadow);
+.filterSearch::placeholder {
+  color: var(--text-3);
+}
+
+.filterSearch:focus-visible {
+  border-color: var(--accent);
 }
 
 .filterField {
   display: flex;
-  align-items: center;
 }
 
 .filterFieldLabel {
@@ -146,71 +166,79 @@
 }
 
 .filterSelect {
-  height: 38px;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background-color: var(--foreground);
+  height: 44px;
+  max-width: 100%;
   padding: 0 14px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-2);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .clearFilters {
-  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid var(--accent-color);
+  border: 1px solid rgba(255, 90, 82, 0.4);
   background-color: var(--accent-wash);
-  padding: 0 14px;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--accent-color);
-  cursor: pointer;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
 }
 
+.clearFilters:hover {
+  background-color: rgba(255, 90, 82, 0.2);
+}
+
+/* List */
 .list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 .row {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
   gap: 16px;
   align-items: center;
-  background-color: var(--foreground);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 14px 18px;
   min-width: 0;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
 }
 
 .rowDate {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
 }
 
 .rowDateDay {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
   line-height: 1;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .rowDateMonth {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--text-tertiary);
+  color: var(--text-3);
 }
 
 .rowMain {
@@ -220,23 +248,24 @@
 .rowTitleLine {
   display: flex;
   align-items: baseline;
-  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 4px;
+  column-gap: 8px;
+  margin-bottom: 6px;
 }
 
 .rowTitle {
-  font-size: 14.5px;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
 }
 
 .rowArtist {
-  font-size: 12.5px;
-  color: var(--text-secondary);
+  font-size: 14px;
+  color: var(--text-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -244,36 +273,40 @@
 
 .rowTags {
   display: flex;
-  gap: 6px;
   flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rowEra,
+.rowGenre {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .rowEra {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 999px;
   background-color: var(--accent-wash);
-  color: var(--accent-color);
-  font-weight: 700;
+  color: var(--accent);
 }
 
 .rowGenre {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background-color: var(--background);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
+  background-color: var(--surface-2);
+  color: var(--text-2);
 }
 
 .rowNote {
-  font-size: 11.5px;
-  color: var(--text-tertiary);
-  margin-top: 6px;
+  margin-top: 8px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
 }
 
 .rowRating {
@@ -283,31 +316,66 @@
 }
 
 .rowStar {
-  font-size: 15px;
-  color: var(--star-empty-color);
+  color: var(--star-off);
 }
 
 .rowStarOn {
-  color: var(--accent-color);
+  color: var(--accent);
 }
 
 .emptyState {
-  text-align: center;
-  padding: 26px;
-  border: 1px dashed var(--border-color);
+  padding: 28px;
+  border: 1px dashed var(--border);
   border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: 12.5px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--text-2);
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
+  .page {
+    padding: 24px 16px 32px;
+  }
+
+  .statRow {
+    gap: 8px;
+  }
+
+  .statTile {
+    padding: 12px;
+  }
+
+  .statLabel {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .statValue {
+    font-size: 24px;
+  }
+
+  .searchWrap {
+    flex-basis: 100%;
+  }
+
+  .filterField {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .filterSelect {
+    width: 100%;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+
   .row {
-    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
   }
 
   .rowRating {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    padding-left: 60px;
+    grid-column: 2;
   }
 }
