@@ -38,19 +38,23 @@ pub fn era_progress(songs: &[Song], rated_ids: &HashSet<String>) -> Vec<EraProgr
     progress
 }
 
-// PRACTICE: show decade progress on the History screen.
-//
-// Read the whole catalog and the ids of the rated songs from `store`, then
-// count them with `era_progress`. If either store call fails, return that
-// error to the caller unchanged.
-//
-// Run `cargo test progress` until every test passes (one of them calls the
-// `/api/progress` endpoint). Ask for a hint when you get stuck. A verified
-// answer is in `solutions/progress.rs`.
+/// Era progress for the whole catalog: reads the catalog and the rated song
+/// ids from `store`, then counts them with `era_progress`. A store error is
+/// returned to the caller unchanged.
 pub async fn load_progress(
-    _store: &(dyn SongStore + Send + Sync),
+    store: &(dyn SongStore + Send + Sync),
 ) -> worker::Result<Vec<EraProgress>> {
-    Ok(Vec::new())
+    let songs: Vec<Song> = match store.get_catalog().await {
+        Ok(songs) => songs,
+        Err(e) => return Err(e),
+    };
+
+    let rated_ids: HashSet<String> = match store.get_rated_ids().await {
+        Ok(rated_ids) => rated_ids,
+        Err(e) => return Err(e),
+    };
+
+    Ok(era_progress(&songs, &rated_ids))
 }
 
 #[cfg(test)]
