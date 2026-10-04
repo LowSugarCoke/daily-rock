@@ -1,11 +1,17 @@
 use super::models::{HistoryItem, HistoryQuery, Rating, Song};
 use super::SongStore;
+use std::collections::HashSet;
 use std::future::Future;
 use std::pin::Pin;
 use worker::send::SendFuture;
 
 pub struct InMemorySongStore {
     pub songs: Vec<Song>,
+    // TODO: Add a mutable in-memory storage for ratings.
+    // Rust fields are immutable by default. To mutate ratings from an immutable `&self` reference,
+    // we use "interior mutability". In a multithreaded context, wrap the vector in a Mutex:
+    // `pub ratings: std::sync::Mutex<Vec<Rating>>`
+    // C++ analogy: std::mutex guarding a std::vector<Rating>.
     pub ratings: std::sync::Mutex<Vec<Rating>>,
 }
 
@@ -56,6 +62,7 @@ impl InMemorySongStore {
                     cover_color: "#a77266".to_string(),
                 },
             ],
+            // TODO: Initialize your ratings mutex here
             ratings: std::sync::Mutex::new(Vec::new()),
         }
     }
@@ -148,6 +155,24 @@ impl SongStore for InMemorySongStore {
             }
             items.sort_by(|a, b| b.rating_id.cmp(&a.rating_id));
             Ok(items)
+        }))
+    }
+
+    fn get_catalog(&self) -> Pin<Box<dyn Future<Output = worker::Result<Vec<Song>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move { Ok(self.songs.clone()) }))
+    }
+
+    fn get_rated_ids(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<HashSet<String>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            Ok(self
+                .ratings
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|r| r.daily_selection_id.clone())
+                .collect())
         }))
     }
 }

@@ -1,6 +1,7 @@
 use super::models::{HistoryItem, HistoryQuery, Rating, Song};
 use super::SongStore;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::future::Future;
 use std::pin::Pin;
 use worker::send::SendFuture;
@@ -35,6 +36,11 @@ pub struct D1HistoryItem {
     pub rating: u8,
     pub note: Option<String>,
     pub timestamp: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct D1RatedId {
+    daily_selection_id: String,
 }
 
 pub struct D1SongStore {
@@ -166,6 +172,40 @@ impl SongStore for D1SongStore {
                 });
             }
             Ok(items)
+        }))
+    }
+
+    fn get_catalog(&self) -> Pin<Box<dyn Future<Output = worker::Result<Vec<Song>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            let statement = self.db.prepare(
+                "SELECT id, title, artist, era, genre_tags, youtube_id, album, year, cover_url, cover_color                  FROM songs ORDER BY CAST(id AS INTEGER) ASC",
+            );
+            let d1_songs: Vec<D1Song> = statement.all().await?.results()?;
+            Ok(d1_songs
+                .into_iter()
+                .map(|s| Song {
+                    id: s.id,
+                    title: s.title,
+                    artist: s.artist,
+                    era: s.era,
+                    genre_tags: serde_json::from_str(&s.genre_tags).unwrap_or_default(),
+                    youtube_id: s.youtube_id,
+                    album: s.album,
+                    year: s.year,
+                    cover_url: s.cover_url,
+                    cover_color: s.cover_color,
+                })
+                .collect())
+        }))
+    }
+
+    fn get_rated_ids(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<HashSet<String>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            let statement = self.db.prepare("SELECT daily_selection_id FROM ratings");
+            let rows: Vec<D1RatedId> = statement.all().await?.results()?;
+            Ok(rows.into_iter().map(|r| r.daily_selection_id).collect())
         }))
     }
 }

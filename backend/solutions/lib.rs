@@ -28,6 +28,7 @@ pub fn app_with_store(store: Arc<dyn store::SongStore + Send + Sync>) -> Router 
         )
         .route("/api/ratings", post(handlers::submit_rating))
         .route("/api/history", get(handlers::get_listening_history))
+        .route("/api/progress", get(handlers::get_progress))
         .with_state(state)
 }
 
@@ -305,5 +306,26 @@ mod tests {
         let history_genre: Vec<store::HistoryItem> = response_genre.json();
         assert_eq!(history_genre.len(), 1);
         assert_eq!(history_genre[0].song_id, "2");
+    }
+
+    #[tokio::test]
+    async fn test_get_progress_counts_rated_songs() {
+        let server = TestServer::new(app());
+
+        let response = server.get("/api/progress").await;
+        response.assert_status_ok();
+        let body: Vec<progress::EraProgress> = response.json();
+        assert_eq!(body.len(), 3);
+        assert!(body.iter().all(|p| p.listened == 0 && p.total == 1));
+
+        server
+            .post("/api/ratings")
+            .json(&serde_json::json!({ "daily_selection_id": "3", "rating": 5 }))
+            .await
+            .assert_status(http::StatusCode::CREATED);
+
+        let body: Vec<progress::EraProgress> = server.get("/api/progress").await.json();
+        assert_eq!(body[2].era, "1970s");
+        assert_eq!(body[2].listened, 1);
     }
 }
