@@ -1,5 +1,6 @@
 use super::models::{HistoryItem, HistoryQuery, Rating, Song};
 use super::SongStore;
+use std::collections::HashSet;
 use std::future::Future;
 use std::pin::Pin;
 use worker::send::SendFuture;
@@ -154,6 +155,24 @@ impl SongStore for InMemorySongStore {
             }
             items.sort_by(|a, b| b.rating_id.cmp(&a.rating_id));
             Ok(items)
+        }))
+    }
+
+    fn get_catalog(&self) -> Pin<Box<dyn Future<Output = worker::Result<Vec<Song>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move { Ok(self.songs.clone()) }))
+    }
+
+    fn get_rated_ids(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<HashSet<String>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            Ok(self
+                .ratings
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|r| r.daily_selection_id.clone())
+                .collect())
         }))
     }
 }

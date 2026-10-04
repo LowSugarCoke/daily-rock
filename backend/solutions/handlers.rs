@@ -120,3 +120,10 @@ pub async fn get_listening_history(
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
     }
 }
+
+pub async fn get_progress(State(state): State<crate::AppState>) -> impl IntoResponse {
+    match crate::progress::load_progress(state.song_store.as_ref()).await {
+        Ok(progress) => Json(progress).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
+    }
+}

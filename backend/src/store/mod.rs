@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::future::Future;
 use std::pin::Pin;
 
@@ -21,6 +22,14 @@ pub trait SongStore {
         &self,
         query: HistoryQuery,
     ) -> Pin<Box<dyn Future<Output = worker::Result<Vec<HistoryItem>>> + Send + '_>>;
+
+    /// Every song in the catalog, in catalog order.
+    fn get_catalog(&self) -> Pin<Box<dyn Future<Output = worker::Result<Vec<Song>>> + Send + '_>>;
+
+    /// The ids of every song that has a rating, i.e. the songs already heard.
+    fn get_rated_ids(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<HashSet<String>>> + Send + '_>>;
 }
 
 #[cfg(test)]

@@ -1,8 +1,8 @@
-use crate::store::Song;
-use serde::Serialize;
+use crate::store::{Song, SongStore};
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct EraProgress {
     pub era: String,
     pub listened: usize,
@@ -38,9 +38,27 @@ pub fn era_progress(songs: &[Song], rated_ids: &HashSet<String>) -> Vec<EraProgr
     progress
 }
 
+// PRACTICE: show decade progress on the History screen.
+//
+// Read the whole catalog and the ids of the rated songs from `store`, then
+// count them with `era_progress`. If either store call fails, return that
+// error to the caller unchanged.
+//
+// Run `cargo test progress` until every test passes (one of them calls the
+// `/api/progress` endpoint). Ask for a hint when you get stuck. A verified
+// answer is in `solutions/progress.rs`.
+pub async fn load_progress(
+    _store: &(dyn SongStore + Send + Sync),
+) -> worker::Result<Vec<EraProgress>> {
+    Ok(Vec::new())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::store::{HistoryItem, HistoryQuery, InMemorySongStore, Rating};
+    use std::future::Future;
+    use std::pin::Pin;
 
     fn song(id: &str, era: &str) -> Song {
         Song {
@@ -133,5 +151,125 @@ mod tests {
                 total: 1
             }]
         );
+    }
+
+    fn rating_for(song_id: &str) -> Rating {
+        Rating {
+            id: format!("r{song_id}"),
+            daily_selection_id: song_id.to_string(),
+            rating: 4,
+            note: None,
+            timestamp: None,
+        }
+    }
+
+    /// A store whose catalog or ratings query fails, like D1 being down.
+    struct FailingStore {
+        catalog_fails: bool,
+    }
+
+    impl SongStore for FailingStore {
+        fn get_daily_selection(&self) -> Pin<Box<dyn Future<Output = Option<Song>> + Send + '_>> {
+            Box::pin(async { None })
+        }
+
+        fn save_rating(
+            &self,
+            _rating: Rating,
+        ) -> Pin<Box<dyn Future<Output = worker::Result<()>> + Send + '_>> {
+            Box::pin(async { Ok(()) })
+        }
+
+        fn get_history(
+            &self,
+            _query: HistoryQuery,
+        ) -> Pin<Box<dyn Future<Output = worker::Result<Vec<HistoryItem>>> + Send + '_>> {
+            Box::pin(async { Ok(vec![]) })
+        }
+
+        fn get_catalog(
+            &self,
+        ) -> Pin<Box<dyn Future<Output = worker::Result<Vec<Song>>> + Send + '_>> {
+            let fails = self.catalog_fails;
+            Box::pin(async move {
+                if fails {
+                    Err(worker::Error::RustError("catalog query failed".to_string()))
+                } else {
+                    Ok(vec![song("1", "1950s")])
+                }
+            })
+        }
+
+        fn get_rated_ids(
+            &self,
+        ) -> Pin<Box<dyn Future<Output = worker::Result<HashSet<String>>> + Send + '_>> {
+            Box::pin(async { Err(worker::Error::RustError("ratings query failed".to_string())) })
+        }
+    }
+
+    #[tokio::test]
+    async fn test_load_progress_with_no_ratings() {
+        let store = InMemorySongStore::new();
+
+        assert_eq!(
+            load_progress(&store).await.unwrap(),
+            vec![
+                EraProgress {
+                    era: "1950s".to_string(),
+                    listened: 0,
+                    total: 1
+                },
+                EraProgress {
+                    era: "1960s".to_string(),
+                    listened: 0,
+                    total: 1
+                },
+                EraProgress {
+                    era: "1970s".to_string(),
+                    listened: 0,
+                    total: 1
+                },
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn test_load_progress_counts_saved_ratings() {
+        let store = InMemorySongStore::new();
+        store.save_rating(rating_for("2")).await.unwrap();
+
+        let progress = load_progress(&store).await.unwrap();
+
+        assert_eq!(
+            progress[1],
+            EraProgress {
+                era: "1960s".to_string(),
+                listened: 1,
+                total: 1
+            }
+        );
+        assert_eq!(progress[0].listened, 0);
+    }
+
+    #[tokio::test]
+    async fn test_load_progress_returns_catalog_error() {
+        let store = FailingStore {
+            catalog_fails: true,
+        };
+
+        let error = load_progress(&store).await.unwrap_err();
+
+        assert_eq!(error.to_string(), "catalog query failed");
+    }
+
+    #[tokio::test]
+    async fn test_load_progress_returns_ratings_error() {
+        let store = FailingStore {
+            catalog_fails: false,
+        };
+
+        let error = load_progress(&store).await.unwrap_err();
+
+        assert_eq!(error.to_string(), "ratings query failed");
     }
 }
