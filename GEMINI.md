@@ -12,8 +12,11 @@ We follow **Test-Driven Development (TDD)** across the entire stack.
     1.  When a feature or endpoint is requested, the AI agent **must first write both the test cases and the complete, correct implementation**.
     2.  The AI agent runs `cargo test` to **empirically verify** that the tests and implementation compile and pass perfectly.
     3.  Once verified, the AI agent **moves the verified implementation to a mirrored directory structure inside `backend/solutions/`**. The solutions directory **must mirror the active workspace structure exactly**, matching file paths and file names (e.g., `backend/solutions/store/in_memory.rs` must correspond directly to `backend/src/store/in_memory.rs`), keeping it organized and 100% aligned with the active workspace to eliminate cognitive friction.
-    4.  In the active working file (e.g., `backend/src/store/in_memory.rs`), the AI agent **replaces the implementation with a stub** (returning a dummy value to allow compilation) and provides step-by-step hints.
+    4.  In the active working file (e.g., `backend/src/store/in_memory.rs`), the AI agent **replaces the implementation with a stub** (returning a dummy value to allow compilation) plus a short task statement. **No hints up front**: give hints only when the user asks, one at a time.
     5.  This guarantees that the challenge is 100% functional and solvable, while keeping the user's practice environment clean of spoilers.
+    6.  Keep each practice small (one function or one handler, done in one sitting) and put it on its own `practice/*` branch, since its tests fail until the user finishes it.
+*   **Plan**: Exercises follow `docs/rust-learning-plan.md`, in order, with the scaffolding it describes for each week.
+*   **Scope**: The practice serves the product goal (listen to one rock song a day on the phone). Don't add auth, infra, or AI tooling to create Rust exercises. Pick exercises that build language fundamentals (ownership and borrowing, `struct`/`enum`/`match`, iterators, `Option`/`Result`, traits) before Workers or async specifics.
 *   **Goal**: The user practices Rust with the peace of mind that the tests are verified and a correct "cheat sheet" solution exists separately if they get stuck.
 *   **User context**: The learner's daily language is C++, new to Rust.
 *   **Hint calibration** (learned from the `/api/greet` challenge — the original hints only described behavior and the learner got stuck on unfamiliar syntax):
