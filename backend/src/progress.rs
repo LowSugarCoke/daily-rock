@@ -9,16 +9,33 @@ pub struct EraProgress {
     pub total: usize,
 }
 
-// PRACTICE: how far through each decade of the catalog are you?
-//
-// Return one `EraProgress` per era, in the order each era first appears in
-// `songs`. `total` counts the era's songs; `listened` counts the ones whose
-// `id` is in `rated_ids`.
-//
-// Run `cargo test progress` until all 5 tests pass. Ask for a hint when you
-// get stuck. A verified answer is in `solutions/progress.rs`.
-pub fn era_progress(_songs: &[Song], _rated_ids: &HashSet<String>) -> Vec<EraProgress> {
-    Vec::new()
+/// One `EraProgress` per era, in the order each era first appears in `songs`.
+/// `total` counts the era's songs; `listened` counts the ones whose `id` is in
+/// `rated_ids`.
+pub fn era_progress(songs: &[Song], rated_ids: &HashSet<String>) -> Vec<EraProgress> {
+    let mut progress: Vec<EraProgress> = Vec::new();
+
+    for song in songs {
+        let index = match progress.iter().position(|p| p.era == song.era) {
+            Some(index) => index,
+            None => {
+                progress.push(EraProgress {
+                    era: song.era.clone(),
+                    listened: 0,
+                    total: 0,
+                });
+                progress.len() - 1
+            }
+        };
+
+        let entry = &mut progress[index];
+        entry.total += 1;
+        if rated_ids.contains(&song.id) {
+            entry.listened += 1;
+        }
+    }
+
+    progress
 }
 
 #[cfg(test)]

@@ -8,7 +8,7 @@ Six weeks, about two hours a week. Each exercise adds a feature you can see in t
 |---|---|---|
 | A. Prepare | 30 min | Read the Rust Book chapters for the week, then read the exercise's tests and guess which syntax you need. |
 | B. Build | 60 min | Write the code until `cargo test` passes. Stuck for more than 20 minutes: ask for one hint. |
-| C. Wrap up | 30 min | Run `cargo clippy`, compare with `backend/solutions/`, write three lines on what differed most from C++, then merge. |
+| C. Wrap up | 30 min | Run `cargo clippy`, compare with `backend/solutions/`, then merge. |
 
 ## Exercises
 
