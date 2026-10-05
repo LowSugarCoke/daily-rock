@@ -128,12 +128,17 @@ pub async fn get_progress(State(state): State<crate::AppState>) -> impl IntoResp
     }
 }
 
+/// Body of `PUT /api/ratings/{id}`. A field left out keeps its current value.
 #[derive(Deserialize, Serialize, Default)]
 pub struct UpdateRatingRequest {
     pub rating: Option<u8>,
     pub note: Option<String>,
 }
 
+/// `PUT /api/ratings/{id}`: edits the score and/or note of a past rating.
+///
+/// An empty note removes the note. Responds 400 for invalid input (nothing is saved),
+/// 404 when no rating has this id, and 200 with the updated rating otherwise.
 pub async fn update_rating(
     State(state): State<crate::AppState>,
     Path(id): Path<String>,
