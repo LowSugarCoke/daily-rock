@@ -208,4 +208,30 @@ impl SongStore for D1SongStore {
             Ok(rows.into_iter().map(|r| r.daily_selection_id).collect())
         }))
     }
+
+    fn update_rating(
+        &self,
+        id: String,
+        rating: Option<u8>,
+        note: Option<String>,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<Option<Rating>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            // NULL keeps the column and an empty note becomes NULL. The timestamp stays,
+            // so editing a rating does not move the day the song was heard.
+            let statement = self.db.prepare(
+                "UPDATE ratings \
+                 SET rating = COALESCE(?2, rating), \
+                     note = CASE WHEN ?3 IS NULL THEN note ELSE NULLIF(?3, '') END \
+                 WHERE id = ?1 \
+                 RETURNING id, daily_selection_id, rating, note, timestamp",
+            );
+            let null = worker::wasm_bindgen::JsValue::NULL;
+            let statement = statement.bind(&[
+                id.into(),
+                rating.map_or(null.clone(), Into::into),
+                note.map_or(null, Into::into),
+            ])?;
+            statement.first::<Rating>(None).await
+        }))
+    }
 }

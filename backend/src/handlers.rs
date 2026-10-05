@@ -127,3 +127,11 @@ pub async fn get_progress(State(state): State<crate::AppState>) -> impl IntoResp
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
     }
 }
+
+// PRACTICE: PUT /api/ratings/{id} - edit a past rating's score and/or note.
+// The tests in lib.rs (`test_update_rating_*`) define the behaviour. You design the
+// request struct, the handler's extractors, and a new `SongStore` method implemented
+// for both the in-memory and the D1 store.
+pub async fn update_rating() -> impl IntoResponse {
+    StatusCode::NOT_IMPLEMENTED
+}
