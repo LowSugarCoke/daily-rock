@@ -30,6 +30,16 @@ pub trait SongStore {
     fn get_rated_ids(
         &self,
     ) -> Pin<Box<dyn Future<Output = worker::Result<HashSet<String>>> + Send + '_>>;
+
+    /// Changes the score and/or note of an existing rating, keeping its listen date.
+    /// `None` leaves a field as it is; an empty note removes the note.
+    /// Returns the updated rating, or `None` when no rating has this id.
+    fn update_rating(
+        &self,
+        id: String,
+        rating: Option<u8>,
+        note: Option<String>,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<Option<Rating>>> + Send + '_>>;
 }
 
 #[cfg(test)]

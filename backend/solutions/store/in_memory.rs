@@ -175,4 +175,25 @@ impl SongStore for InMemorySongStore {
                 .collect())
         }))
     }
+
+    fn update_rating(
+        &self,
+        id: String,
+        rating: Option<u8>,
+        note: Option<String>,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<Option<Rating>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            let mut ratings = self.ratings.lock().unwrap();
+            let Some(existing) = ratings.iter_mut().find(|r| r.id == id) else {
+                return Ok(None);
+            };
+            if let Some(rating) = rating {
+                existing.rating = rating;
+            }
+            if let Some(note) = note {
+                existing.note = if note.is_empty() { None } else { Some(note) };
+            }
+            Ok(Some(existing.clone()))
+        }))
+    }
 }

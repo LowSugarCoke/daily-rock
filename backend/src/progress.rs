@@ -209,6 +209,15 @@ mod tests {
         ) -> Pin<Box<dyn Future<Output = worker::Result<HashSet<String>>> + Send + '_>> {
             Box::pin(async { Err(worker::Error::RustError("ratings query failed".to_string())) })
         }
+
+        fn update_rating(
+            &self,
+            _id: String,
+            _rating: Option<u8>,
+            _note: Option<String>,
+        ) -> Pin<Box<dyn Future<Output = worker::Result<Option<Rating>>> + Send + '_>> {
+            Box::pin(async { Ok(None) })
+        }
     }
 
     #[tokio::test]
