@@ -6,6 +6,7 @@ use std::sync::Arc;
 use tower_service::Service;
 use worker::*;
 
+pub mod errors;
 pub mod handlers;
 pub mod progress;
 pub mod store;

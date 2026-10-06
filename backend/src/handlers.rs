@@ -1,3 +1,4 @@
+use crate::errors::AppError;
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
@@ -35,11 +36,13 @@ pub async fn greet(Query(query): Query<GreetQuery>) -> impl IntoResponse {
 
 pub async fn get_current_daily_selection(
     State(state): State<crate::AppState>,
-) -> impl IntoResponse {
-    match state.song_store.get_daily_selection().await {
-        Some(song) => Json(song).into_response(),
-        None => (StatusCode::NOT_FOUND, Json("No song found")).into_response(),
-    }
+) -> Result<Json<crate::store::Song>, AppError> {
+    let song = state
+        .song_store
+        .get_daily_selection()
+        .await
+        .ok_or_else(|| AppError::NotFound("No song found".to_string()))?;
+    Ok(Json(song))
 }
 
 #[derive(Deserialize, Serialize)]
@@ -52,30 +55,24 @@ pub struct CreateRatingRequest {
 pub async fn submit_rating(
     State(state): State<crate::AppState>,
     Json(payload): Json<CreateRatingRequest>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AppError> {
     if payload.daily_selection_id.len() > 64 {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json("Daily selection ID is too long"),
-        )
-            .into_response();
+        return Err(AppError::BadRequest(
+            "Daily selection ID is too long".to_string(),
+        ));
     }
 
     if payload.rating < 1 || payload.rating > 5 {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json("Rating must be between 1 and 5"),
-        )
-            .into_response();
+        return Err(AppError::BadRequest(
+            "Rating must be between 1 and 5".to_string(),
+        ));
     }
 
     if let Some(ref note) = payload.note {
         if note.chars().count() > 1024 {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json("Note must be 1024 characters or less"),
-            )
-                .into_response();
+            return Err(AppError::BadRequest(
+                "Note must be 1024 characters or less".to_string(),
+            ));
         }
     }
 
@@ -105,27 +102,23 @@ pub async fn submit_rating(
         timestamp: None,
     };
 
-    match state.song_store.save_rating(rating).await {
-        Ok(_) => (StatusCode::CREATED, Json("Rating saved")).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
-    }
+    state.song_store.save_rating(rating).await?;
+    Ok((StatusCode::CREATED, Json("Rating saved")))
 }
 
 pub async fn get_listening_history(
     State(state): State<crate::AppState>,
     Query(query): Query<crate::store::HistoryQuery>,
-) -> impl IntoResponse {
-    match state.song_store.get_history(query).await {
-        Ok(history) => Json(history).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
-    }
+) -> Result<Json<Vec<crate::store::HistoryItem>>, AppError> {
+    Ok(Json(state.song_store.get_history(query).await?))
 }
 
-pub async fn get_progress(State(state): State<crate::AppState>) -> impl IntoResponse {
-    match crate::progress::load_progress(state.song_store.as_ref()).await {
-        Ok(progress) => Json(progress).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
-    }
+pub async fn get_progress(
+    State(state): State<crate::AppState>,
+) -> Result<Json<Vec<crate::progress::EraProgress>>, AppError> {
+    Ok(Json(
+        crate::progress::load_progress(state.song_store.as_ref()).await?,
+    ))
 }
 
 /// Body of `PUT /api/ratings/{id}`. A field left out keeps its current value.
@@ -143,42 +136,35 @@ pub async fn update_rating(
     State(state): State<crate::AppState>,
     Path(id): Path<String>,
     Json(payload): Json<UpdateRatingRequest>,
-) -> impl IntoResponse {
+) -> Result<Json<crate::store::Rating>, AppError> {
     if id.len() > 64 {
-        return (StatusCode::BAD_REQUEST, Json("Rating ID is too long")).into_response();
+        return Err(AppError::BadRequest("Rating ID is too long".to_string()));
     }
 
     if payload.rating.is_none() && payload.note.is_none() {
-        return (StatusCode::BAD_REQUEST, Json("Nothing to update")).into_response();
+        return Err(AppError::BadRequest("Nothing to update".to_string()));
     }
 
     if let Some(rating) = payload.rating {
         if !(1..=5).contains(&rating) {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json("Rating must be between 1 and 5"),
-            )
-                .into_response();
+            return Err(AppError::BadRequest(
+                "Rating must be between 1 and 5".to_string(),
+            ));
         }
     }
 
     if let Some(ref note) = payload.note {
         if note.chars().count() > 1024 {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json("Note must be 1024 characters or less"),
-            )
-                .into_response();
+            return Err(AppError::BadRequest(
+                "Note must be 1024 characters or less".to_string(),
+            ));
         }
     }
 
-    match state
+    let rating = state
         .song_store
         .update_rating(id, payload.rating, payload.note)
-        .await
-    {
-        Ok(Some(rating)) => Json(rating).into_response(),
-        Ok(None) => (StatusCode::NOT_FOUND, Json("Rating not found")).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
-    }
+        .await?
+        .ok_or_else(|| AppError::NotFound("Rating not found".to_string()))?;
+    Ok(Json(rating))
 }
