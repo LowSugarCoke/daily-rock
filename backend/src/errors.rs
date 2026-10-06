@@ -12,25 +12,28 @@ pub enum AppError {
     Internal(worker::Error),
 }
 
-// PRACTICE: Convert a worker::Error into AppError::Internal, preserving the original error.
+/// Preserves a store failure as an internal application error.
 impl From<worker::Error> for AppError {
     fn from(error: worker::Error) -> Self {
-        let _ = error;
-        Self::BadRequest("Exercise not implemented".to_string())
+        Self::Internal(error)
     }
 }
 
-// PRACTICE: Return JSON strings with 400 for BadRequest and 404 for NotFound,
-// preserving their messages. Internal returns 500 with exactly:
-// "Something went wrong. Please try again." Never return the internal details.
+/// Converts application errors into JSON string responses.
+/// Bad requests and missing resources retain their messages with status 400 or 404.
+/// Internal errors return status 500 and a fixed message without exposing store details.
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let _ = self;
-        (
-            StatusCode::NOT_IMPLEMENTED,
-            Json("Exercise not implemented"),
-        )
-            .into_response()
+        let (status, message) = match self {
+            Self::BadRequest(message) => (StatusCode::BAD_REQUEST, message),
+            Self::NotFound(message) => (StatusCode::NOT_FOUND, message),
+            Self::Internal(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Something went wrong. Please try again.".to_string(),
+            ),
+        };
+
+        (status, Json(message)).into_response()
     }
 }
 
