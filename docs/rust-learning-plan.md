@@ -34,3 +34,9 @@ Six weeks, about two hours a week. Each exercise adds a feature you can see in t
 - Type the code yourself instead of pasting it.
 - Treat every clippy warning as a small lesson: look it up, then fix it.
 - If a week runs long, take another week. Later exercises build on earlier ones.
+
+## Latest practice
+
+2026-10-06: Exercise 4 (`AppError`) implemented with guided instruction; all 41 tests pass. See [practice log](rust-practice-log.md) for concepts covered, assistance provided, and verification.
+
+Next session: briefly review error conversion and tuple destructuring, then prepare exercise 5 (Genre stats). Independent recall of exercise 4 has not yet been checked.
