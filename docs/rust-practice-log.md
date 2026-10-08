@@ -35,3 +35,35 @@
 - `cargo test --locked`：41 個測試通過（35 個單元／路由測試、6 個整合測試）。
 - `cargo clippy --all-targets --locked -- -D warnings`：通過，無警告。
 - `cargo fmt --all -- --check`：通過。
+
+## 2026-10-07 - 第 5 題：Genre stats
+
+- 狀態：實作完成，驗證通過。
+- 練習分支：`practice/genre-stats`；來源分支：`feat/redesign`。
+- 檔案：`backend/src/genres.rs`（`GenreCount`、`genre_counts`）。
+- 行事曆安排：21:55-22:25，America/Toronto，30 分鐘。
+- 教學頁：https://claude.ai/artifact/QpzpBbASM8faQZA7NgCEZf
+
+### 完成內容
+
+- `genre_counts(&[HistoryItem]) -> Vec<GenreCount>`：每個曲風標籤出現幾次，次數由大到小，同次數照名字 A 到 Z。
+- 5 個測試：空紀錄、每個標籤都算、聽最多的在前、同次數照名字、沒標籤的歌不加東西。
+
+### 學習者自己做的與提供的協助
+
+- 計畫第 5 週要學習者自己設計 struct、簽名和測試；學習者看到「全部通過」時不懂為什麼（因為還沒有任何 genres 測試），之後請 Claude Code 寫測試，struct、簽名和 5 個測試都由 Claude Code 提供。
+- 學習者寫出 C++ 風格的虛擬碼：兩層 for 加線性搜尋的計數邏輯正確，缺排序。Claude Code 列出問題和 C++ 到 Rust 的對照表，給 `sort_by` 的提示（另一個 struct 的範例：`cmp`、對調 a b、`.then`）。
+- 學習者把範例那一行照抄進迴圈裡，之後要求正確寫法；Claude Code 照學習者的邏輯翻成 Rust，學習者自己打進檔案，5 個測試通過、clippy 無警告。
+- 之後比較了 `iter_mut().find` + `if let` 和 `HashMap` 的寫法；收尾前檔案已改成與 `backend/solutions/genres.rs` 相同的 `HashMap` 版本，所以 commit 的是解答版本。
+
+### 學習證據與下次教法
+
+- 能用兩層迴圈和線性搜尋寫出計數邏輯（與第 1 題 `era_progress` 相同的思路）。
+- 尚未獨立寫出：Rust 的 for 語法、`iter_mut`、`*` 解參考比較、`clone`、`sort_by` 的組合、`HashMap` 的 `entry().or_insert()`。
+- 下次先用 10 分鐘，不看答案把 `genre_counts` 重寫成 `HashMap` 版本（`flat_map`、`entry`、`sort_by`），讓 5 個測試通過，再準備第 6 題。
+
+### 驗證
+
+- `cargo test --locked`：46 個測試通過（40 個單元／路由測試、6 個整合測試）。
+- `cargo clippy --all-targets --locked -- -D warnings`：通過，無警告。
+- `cargo fmt --all -- --check`：通過。

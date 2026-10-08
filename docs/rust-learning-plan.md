@@ -37,6 +37,6 @@ Six weeks, about two hours a week. Each exercise adds a feature you can see in t
 
 ## Latest practice
 
-2026-10-06: Exercise 4 (`AppError`) implemented with guided instruction; all 41 tests pass. See [practice log](rust-practice-log.md) for concepts covered, assistance provided, and verification.
+2026-10-07: Exercise 5 (Genre stats) done; all 46 tests pass. The struct, signature, and tests were provided on request, and the learner's own two-loop version passed before the file was switched to the solution's `HashMap` version. See [practice log](rust-practice-log.md).
 
-Next session: briefly review error conversion and tuple destructuring, then prepare exercise 5 (Genre stats). Independent recall of exercise 4 has not yet been checked.
+Next session: rewrite `genre_counts` with `HashMap` without looking at the answer (10 min), then prepare exercise 6 (Cloudflare Access JWT check).

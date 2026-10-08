@@ -1,29 +1,39 @@
-// PRACTICE: Genre stats (exercise 5 in docs/rust-learning-plan.md).
-//
-// The History page shows a genre filter chip for every genre you have heard,
-// with how many times you heard it. Today the frontend counts these itself
-// (`genresByCount` in frontend/src/app/history/page.tsx). Move that counting
-// into the backend.
-//
-// Requirement:
-// - Input: the listening history, a slice of `HistoryItem` (one per rated song).
-// - Output: one entry per genre tag, with the genre's name and how many history
-//   items carry that tag.
-// - Order: the most heard genre first. Genres with the same count are ordered
-//   by name (A to Z).
-// - No history gives an empty list. A song with no tags adds nothing.
-//
-// This week you design it yourself:
-// 1. A `pub struct` for one entry and the `pub fn` signature.
-// 2. The tests in the `tests` module below, written first, one per rule above.
-// 3. The body, until `cargo test genres` passes.
+//! Genre counts for the History page filter chips.
+
+use crate::store::HistoryItem;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct GenreCount {
+    pub name: String,
+    pub count: usize,
+}
+
+/// How many rated songs carry each genre tag, most heard first; genres with
+/// the same count are ordered by name. A song with no tags adds nothing.
+pub fn genre_counts(items: &[HistoryItem]) -> Vec<GenreCount> {
+    let mut counts: HashMap<&str, usize> = HashMap::new();
+    for tag in items.iter().flat_map(|item| &item.genre_tags) {
+        *counts.entry(tag.as_str()).or_insert(0) += 1;
+    }
+
+    let mut result: Vec<GenreCount> = counts
+        .into_iter()
+        .map(|(name, count)| GenreCount {
+            name: name.to_string(),
+            count,
+        })
+        .collect();
+    result.sort_by(|a, b| b.count.cmp(&a.count).then_with(|| a.name.cmp(&b.name)));
+    result
+}
 
 #[cfg(test)]
 mod tests {
-    use crate::store::HistoryItem;
+    use super::*;
 
     /// A history item for one rated song with the given genre tags.
-    #[allow(dead_code)]
     fn item(song_id: &str, genres: &[&str]) -> HistoryItem {
         HistoryItem {
             rating_id: format!("r{song_id}"),
@@ -41,5 +51,69 @@ mod tests {
             note: None,
             timestamp: "2026-10-07T00:00:00Z".to_string(),
         }
+    }
+
+    fn count(name: &str, count: usize) -> GenreCount {
+        GenreCount {
+            name: name.to_string(),
+            count,
+        }
+    }
+
+    #[test]
+    fn test_no_history_has_no_genres() {
+        assert_eq!(genre_counts(&[]), vec![]);
+    }
+
+    #[test]
+    fn test_counts_every_tag_of_every_song() {
+        let items = vec![
+            item("1", &["Hard Rock", "Classic Rock"]),
+            item("2", &["Hard Rock"]),
+        ];
+
+        assert_eq!(
+            genre_counts(&items),
+            vec![count("Hard Rock", 2), count("Classic Rock", 1)]
+        );
+    }
+
+    #[test]
+    fn test_most_heard_genre_comes_first() {
+        let items = vec![
+            item("1", &["Blues Rock"]),
+            item("2", &["Punk"]),
+            item("3", &["Punk"]),
+            item("4", &["Punk"]),
+        ];
+
+        assert_eq!(
+            genre_counts(&items),
+            vec![count("Punk", 3), count("Blues Rock", 1)]
+        );
+    }
+
+    #[test]
+    fn test_ties_are_ordered_by_name() {
+        let items = vec![
+            item("1", &["Punk", "Glam Rock"]),
+            item("2", &["Blues Rock"]),
+        ];
+
+        assert_eq!(
+            genre_counts(&items),
+            vec![
+                count("Blues Rock", 1),
+                count("Glam Rock", 1),
+                count("Punk", 1)
+            ]
+        );
+    }
+
+    #[test]
+    fn test_song_without_tags_adds_nothing() {
+        let items = vec![item("1", &[]), item("2", &["Grunge"])];
+
+        assert_eq!(genre_counts(&items), vec![count("Grunge", 1)]);
     }
 }

@@ -1,3 +1,5 @@
+//! Genre counts for the History page filter chips.
+
 use crate::store::HistoryItem;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -9,7 +11,7 @@ pub struct GenreCount {
 }
 
 /// How many rated songs carry each genre tag, most heard first; genres with
-/// the same count are ordered by name.
+/// the same count are ordered by name. A song with no tags adds nothing.
 pub fn genre_counts(items: &[HistoryItem]) -> Vec<GenreCount> {
     let mut counts: HashMap<&str, usize> = HashMap::new();
     for tag in items.iter().flat_map(|item| &item.genre_tags) {
@@ -31,6 +33,7 @@ pub fn genre_counts(items: &[HistoryItem]) -> Vec<GenreCount> {
 mod tests {
     use super::*;
 
+    /// A history item for one rated song with the given genre tags.
     fn item(song_id: &str, genres: &[&str]) -> HistoryItem {
         HistoryItem {
             rating_id: format!("r{song_id}"),
@@ -92,7 +95,10 @@ mod tests {
 
     #[test]
     fn test_ties_are_ordered_by_name() {
-        let items = vec![item("1", &["Punk", "Glam Rock"]), item("2", &["Blues Rock"])];
+        let items = vec![
+            item("1", &["Punk", "Glam Rock"]),
+            item("2", &["Blues Rock"]),
+        ];
 
         assert_eq!(
             genre_counts(&items),
