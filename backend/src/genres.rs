@@ -10,23 +10,12 @@ pub struct GenreCount {
     pub count: usize,
 }
 
-/// How many rated songs carry each genre tag, most heard first; genres with
-/// the same count are ordered by name. A song with no tags adds nothing.
+// PRACTICE: 不看答案,用 HashMap 重寫 genre_counts,讓下面 5 個測試通過。
+// 規則:每首歌的每個曲風標籤算一次;次數多的在前;同次數照名字 A 到 Z;沒有標籤的歌不加任何東西。
 pub fn genre_counts(items: &[HistoryItem]) -> Vec<GenreCount> {
-    let mut counts: HashMap<&str, usize> = HashMap::new();
-    for tag in items.iter().flat_map(|item| &item.genre_tags) {
-        *counts.entry(tag.as_str()).or_insert(0) += 1;
-    }
-
-    let mut result: Vec<GenreCount> = counts
-        .into_iter()
-        .map(|(name, count)| GenreCount {
-            name: name.to_string(),
-            count,
-        })
-        .collect();
-    result.sort_by(|a, b| b.count.cmp(&a.count).then_with(|| a.name.cmp(&b.name)));
-    result
+    let _ = items;
+    let _: HashMap<&str, usize> = HashMap::new();
+    Vec::new()
 }
 
 #[cfg(test)]
