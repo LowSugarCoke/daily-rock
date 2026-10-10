@@ -94,3 +94,36 @@
 - `cargo fmt --all -- --check`:通過。
 - `cargo clippy`:未執行,Windows Application Control 擋住了 `cargo-clippy.exe` (os error 4551)。
 
+## 2026-10-10 - 第 6 題:Cloudflare Access JWT 檢查
+
+- 狀態:完成,但程式都由 Claude Code 寫。
+- 練習分支:`practice/access-jwt`;來源分支:`feat/redesign`。
+- 檔案:`backend/src/access.rs` (`AccessConfig`、`AccessError`、`verify_access`)、`backend/test-keys/` (只給測試用的 RSA 金鑰)。
+- 行事曆安排:當天行事曆沒有 Daily Rock 時段。
+- 教學頁:https://claude.ai/artifact/CWZYcT4DHRQKzZQZfbnrRi
+
+### 完成內容
+
+- `verify_access(&HeaderMap, &DecodingKey, &AccessConfig) -> Result<String, AccessError>`:從 `Cf-Access-Jwt-Assertion` 拿出門票,用 `jsonwebtoken` 驗 RS256 簽章、`exp`、`iss`、`aud`,回傳 email;沒有 header 是 `MissingToken`,過期是 `Expired`,其他是 `InvalidToken`。
+- 7 個測試:正常的票、沒有 header、不是 JWT、別的私鑰簽的、別的 `aud`、別的 `iss`、過期。
+- 加入 `jsonwebtoken` 10 (`rust_crypto`、`use_pem`),以及 wasm32 用的 `getrandom` `js` feature;確認能編成 wasm32。
+
+### 學習者自己做的與提供的協助
+
+- 計畫第 6 週要學習者自己設計型別、簽名、測試和本體。學習者請 Claude Code 寫測試,所以型別和簽名也一起由 Claude Code 寫;之後又請 Claude Code 寫本體。學習者這題沒有寫程式。
+- 學習者問了三個觀念:測試用的私鑰和公鑰放在哪、公鑰會不會由 client 送 (不會,否則壞人可以用自己的鑰匙做假票)、Worker 什麼時候下載公鑰 (第一個請求需要時下載並存在記憶體,門票的 `kid` 不認得時再重新下載)。
+- 本體寫好後,Claude Code 分三段配 C++ 對照解釋:`get` / `and_then` / `ok_or` / `?`、`Validation` 設定、`decode` 加 `map_err` 與 `match error.kind()`。
+
+### 學習證據與下次教法
+
+- 能說出:門票三段的意義、私鑰蓋章公鑰驗章、公鑰必須來自後端信任的來源。
+- 尚未獨立寫出:`Option` 串接 (`and_then`、`ok_or`)、`map_err`、讀外部 crate 文件並對到 API。
+- 下次先刪掉 `verify_access` 的本體 (保留測試),不看答案重寫到 7 個測試通過;再做下載公鑰、每個請求都驗票、沒過回 401。
+
+### 驗證
+
+- `cargo test --locked`:53 個測試通過 (47 個單元/路由測試、6 個整合測試)。
+- `cargo clippy --all-targets --locked -- -D warnings`:通過,無警告。
+- `cargo fmt --all -- --check`:通過。
+- `cargo check --target wasm32-unknown-unknown`:通過。
+
