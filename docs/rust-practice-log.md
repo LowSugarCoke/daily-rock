@@ -67,3 +67,30 @@
 - `cargo test --locked`：46 個測試通過（40 個單元／路由測試、6 個整合測試）。
 - `cargo clippy --all-targets --locked -- -D warnings`：通過，無警告。
 - `cargo fmt --all -- --check`：通過。
+
+## 2026-10-09 - 第 5 題重寫:`genre_counts` 改用 HashMap
+
+- 狀態:完成,沒有看答案。
+- 練習分支:`practice/genre-hashmap`;來源分支:`feat/redesign`。
+- 行事曆安排:19:35-20:05,America/Toronto,30 分鐘。
+- 教學頁:https://claude.ai/artifact/QpzpBbASM8faQZA7NgCEZf
+
+### 學習者自己做的與提供的協助
+
+- 學習者自己寫出整個函式:`HashMap<&str, usize>` 計數、`into_iter().map(...).collect()` 轉成 `Vec<GenreCount>`、`sort_by` 加 `then_with` 排序。
+- 第一版直接拿 `item.genre_tags` (整個 `Vec<String>`) 當 key,數的是歌不是標籤,編譯失敗 (`&str: Borrow<Vec<String>>`)。Claude Code 指出少了一層走過每個標籤的迴圈,並給 `for tag in &item.genre_tags` 和 `tag.as_str()` 的對照;學習者補上後 5 個測試通過。
+- 測試通過後,學習者問一行的寫法;Claude Code 解釋 `*map.entry(key).or_insert(0) += 1`,學習者自己打進檔案。
+- 和解答的差別:解答用 `flat_map` 把兩層迴圈攤成一層,其餘幾乎相同。
+
+### 學習證據與下次教法
+
+- 已能獨立寫出:`HashMap` 宣告與更新、`into_iter().map().collect()`、`sort_by` 加 `cmp` 和 `then_with`、`&String` 轉 `&str`。
+- 還要注意:先確認欄位的型別 (單一值還是清單),再決定迴圈有幾層。
+- 下次準備第 6 題 Cloudflare Access JWT 檢查。
+
+### 驗證
+
+- `cargo test --locked`:46 個測試通過 (40 個單元/路由測試、6 個整合測試)。
+- `cargo fmt --all -- --check`:通過。
+- `cargo clippy`:未執行,Windows Application Control 擋住了 `cargo-clippy.exe` (os error 4551)。
+

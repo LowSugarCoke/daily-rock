@@ -37,6 +37,6 @@ Six weeks, about two hours a week. Each exercise adds a feature you can see in t
 
 ## Latest practice
 
-2026-10-07: Exercise 5 (Genre stats) done; all 46 tests pass. The struct, signature, and tests were provided on request, and the learner's own two-loop version passed before the file was switched to the solution's `HashMap` version. See [practice log](rust-practice-log.md).
+2026-10-09: Exercise 5 rewrite done without looking at the answer; all 46 tests pass. The learner wrote the `HashMap` version, missed the inner loop over tags on the first try, then switched the `if/else` to `entry().or_insert()` after one hint. See [practice log](rust-practice-log.md).
 
-Next session: rewrite `genre_counts` with `HashMap` without looking at the answer (10 min), then prepare exercise 6 (Cloudflare Access JWT check).
+Next session: prepare exercise 6 (Cloudflare Access JWT check).
