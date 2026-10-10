@@ -37,6 +37,6 @@ Six weeks, about two hours a week. Each exercise adds a feature you can see in t
 
 ## Latest practice
 
-2026-10-09: Exercise 5 rewrite done without looking at the answer; all 46 tests pass. The learner wrote the `HashMap` version, missed the inner loop over tags on the first try, then switched the `if/else` to `entry().or_insert()` after one hint. See [practice log](rust-practice-log.md).
+2026-10-10: Exercise 6 done, but on request Claude Code wrote the types, the signature, the 7 tests and the body; the learner wrote no code. All 53 tests pass. See [practice log](rust-practice-log.md).
 
-Next session: prepare exercise 6 (Cloudflare Access JWT check).
+Next session: rewrite the body of `verify_access` without looking at the answer (delete it, keep the tests), as with exercise 5. After that: download Cloudflare's public keys, check the token on every request, and answer 401.

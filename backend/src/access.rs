@@ -1,31 +1,12 @@
-// PRACTICE: Cloudflare Access JWT check (exercise 6 in docs/rust-learning-plan.md).
-//
-// Cloudflare Access sits in front of the app. After you sign in, it adds a
-// signed token (a JWT) to every request in the `Cf-Access-Jwt-Assertion`
-// header. Today the backend trusts every request. Make it check that token,
-// so only you get in.
-//
-// Requirement:
-// - Input: the request headers (`axum::http::HeaderMap`), Cloudflare's public
-//   key (`jsonwebtoken::DecodingKey`), and which Access app the token must be
-//   for: the team domain (for example `dailyrock.cloudflareaccess.com`) and the
-//   app's audience tag (for example `daily-rock-aud`).
-// - Output: the signed-in email (the token's `email` claim), or why the request
-//   is not let in:
-//   - no `Cf-Access-Jwt-Assertion` header: the token is missing;
-//   - the token is not a JWT, is signed by another key, has another audience
-//     (`aud`), or another issuer (`iss` is not `https://<team domain>`): the
-//     token is invalid;
-//   - the token's time is up (`exp` in the past): the token has expired.
-// - The token is signed with RS256.
-// - The `jsonwebtoken` crate is already in Cargo.toml: read its docs
-//   (https://docs.rs/jsonwebtoken/10) for `decode` and `Validation`.
-//
-// The types, the signature and the tests below are written (on request).
-// Write the body, until `cargo test access` passes. Then it gets a code review.
+//! Cloudflare Access check: confirms a request comes from you.
+//!
+//! Cloudflare Access sits in front of the app. After you sign in, it adds a
+//! signed token (a JWT) to every request in the `Cf-Access-Jwt-Assertion`
+//! header. The backend checks that token before trusting the request.
 
 use axum::http::HeaderMap;
-use jsonwebtoken::DecodingKey;
+use jsonwebtoken::{decode, errors::ErrorKind, Algorithm, DecodingKey, Validation};
+use serde::Deserialize;
 
 /// Which Cloudflare Access application the token must come from.
 pub struct AccessConfig {
@@ -46,6 +27,12 @@ pub enum AccessError {
     Expired,
 }
 
+/// The token's claims this check reads; `decode` checks the rest.
+#[derive(Deserialize)]
+struct AccessClaims {
+    email: String,
+}
+
 /// Checks the Access token in `headers` against `key` and `config`, and
 /// returns the signed-in email.
 pub fn verify_access(
@@ -53,8 +40,21 @@ pub fn verify_access(
     key: &DecodingKey,
     config: &AccessConfig,
 ) -> Result<String, AccessError> {
-    let _ = (headers, key, config);
-    todo!("check the Cf-Access-Jwt-Assertion token")
+    let token = headers
+        .get("cf-access-jwt-assertion")
+        .and_then(|value| value.to_str().ok())
+        .ok_or(AccessError::MissingToken)?;
+
+    let mut validation = Validation::new(Algorithm::RS256);
+    validation.set_audience(&[&config.audience]);
+    validation.set_issuer(&[format!("https://{}", config.team_domain)]);
+
+    let data =
+        decode::<AccessClaims>(token, key, &validation).map_err(|error| match error.kind() {
+            ErrorKind::ExpiredSignature => AccessError::Expired,
+            _ => AccessError::InvalidToken,
+        })?;
+    Ok(data.claims.email)
 }
 
 #[cfg(test)]
