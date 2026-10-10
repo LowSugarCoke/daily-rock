@@ -55,3 +55,14 @@ describe("Next.js Rewrites Config", () => {
     ]);
   });
 });
+
+describe("Next.js Images Config", () => {
+  test("allows album covers from Apple's image CDN", async () => {
+    const config = (await import("./next.config")).default;
+    expect(config.images?.remotePatterns).toContainEqual({
+      protocol: "https",
+      hostname: "*.mzstatic.com",
+      pathname: "/image/thumb/**",
+    });
+  });
+});

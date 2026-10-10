@@ -1,11 +1,17 @@
 use super::models::{HistoryItem, HistoryQuery, Rating, Song};
 use super::SongStore;
+use std::collections::HashSet;
 use std::future::Future;
 use std::pin::Pin;
 use worker::send::SendFuture;
 
 pub struct InMemorySongStore {
     pub songs: Vec<Song>,
+    // TODO: Add a mutable in-memory storage for ratings.
+    // Rust fields are immutable by default. To mutate ratings from an immutable `&self` reference,
+    // we use "interior mutability". In a multithreaded context, wrap the vector in a Mutex:
+    // `pub ratings: std::sync::Mutex<Vec<Rating>>`
+    // C++ analogy: std::mutex guarding a std::vector<Rating>.
     pub ratings: std::sync::Mutex<Vec<Rating>>,
 }
 
@@ -20,6 +26,12 @@ impl InMemorySongStore {
                     era: "1950s".to_string(),
                     genre_tags: vec!["Rock 'n' Roll".to_string()],
                     youtube_id: "T38v3-SSGcM".to_string(),
+                    album: "Berry Is On Top".to_string(),
+                    year: 1958,
+                    cover_url:
+                        "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/berry/600x600bb.jpg"
+                            .to_string(),
+                    cover_color: "#eda273".to_string(),
                 },
                 Song {
                     id: "2".to_string(),
@@ -28,6 +40,12 @@ impl InMemorySongStore {
                     era: "1960s".to_string(),
                     genre_tags: vec!["Hard Rock".to_string(), "Classic Rock".to_string()],
                     youtube_id: "HQmmM_vIi4I".to_string(),
+                    album: "Led Zeppelin II".to_string(),
+                    year: 1969,
+                    cover_url:
+                        "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/zep2/600x600bb.jpg"
+                            .to_string(),
+                    cover_color: "#b28470".to_string(),
                 },
                 Song {
                     id: "3".to_string(),
@@ -36,8 +54,15 @@ impl InMemorySongStore {
                     era: "1970s".to_string(),
                     genre_tags: vec!["Progressive Rock".to_string(), "Glam Rock".to_string()],
                     youtube_id: "fJ9rUzIMcZQ".to_string(),
+                    album: "A Night At the Opera".to_string(),
+                    year: 1975,
+                    cover_url:
+                        "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/queen/600x600bb.jpg"
+                            .to_string(),
+                    cover_color: "#a77266".to_string(),
                 },
             ],
+            // TODO: Initialize your ratings mutex here
             ratings: std::sync::Mutex::new(Vec::new()),
         }
     }
@@ -115,6 +140,10 @@ impl SongStore for InMemorySongStore {
                         era: song.era.clone(),
                         genre_tags: song.genre_tags.clone(),
                         youtube_id: song.youtube_id.clone(),
+                        album: song.album.clone(),
+                        year: song.year,
+                        cover_url: song.cover_url.clone(),
+                        cover_color: song.cover_color.clone(),
                         rating: r.rating,
                         note: r.note.clone(),
                         timestamp: r
@@ -126,6 +155,45 @@ impl SongStore for InMemorySongStore {
             }
             items.sort_by(|a, b| b.rating_id.cmp(&a.rating_id));
             Ok(items)
+        }))
+    }
+
+    fn get_catalog(&self) -> Pin<Box<dyn Future<Output = worker::Result<Vec<Song>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move { Ok(self.songs.clone()) }))
+    }
+
+    fn get_rated_ids(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<HashSet<String>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            Ok(self
+                .ratings
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|r| r.daily_selection_id.clone())
+                .collect())
+        }))
+    }
+
+    fn update_rating(
+        &self,
+        id: String,
+        rating: Option<u8>,
+        note: Option<String>,
+    ) -> Pin<Box<dyn Future<Output = worker::Result<Option<Rating>>> + Send + '_>> {
+        Box::pin(SendFuture::new(async move {
+            let mut ratings = self.ratings.lock().unwrap();
+            let Some(existing) = ratings.iter_mut().find(|r| r.id == id) else {
+                return Ok(None);
+            };
+            if let Some(rating) = rating {
+                existing.rating = rating;
+            }
+            if let Some(note) = note {
+                existing.note = if note.is_empty() { None } else { Some(note) };
+            }
+            Ok(Some(existing.clone()))
         }))
     }
 }

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   computeAverageRating,
   computeCurrentStreak,
@@ -16,6 +16,11 @@ function item(overrides: Partial<HistoryItem>): HistoryItem {
     era: "1950s",
     genre_tags: ["Rock 'n' Roll"],
     youtube_id: "T38v3-SSGcM",
+    album: "Berry Is On Top",
+    year: 1958,
+    cover_url:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+    cover_color: "#eda273",
     rating: 5,
     note: null,
     timestamp: "2026-08-15 12:00:00",
@@ -54,6 +59,15 @@ describe("computeAverageRating", () => {
 });
 
 describe("computeCurrentStreak", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test("returns 0 for an empty list", () => {
     expect(computeCurrentStreak([])).toBe(0);
   });
@@ -79,6 +93,20 @@ describe("computeCurrentStreak", () => {
       item({ rating_id: "r1", timestamp: "2026-08-15 09:00:00" }),
     ];
     expect(computeCurrentStreak(items)).toBe(1);
+  });
+
+  test("is 0 once a full day has passed without listening", () => {
+    const items = [item({ timestamp: "2026-08-15 09:00:00" })];
+    expect(computeCurrentStreak(items, new Date("2026-08-17T12:00:00Z"))).toBe(
+      0
+    );
+  });
+
+  test("stays alive until the end of the day after the last listen", () => {
+    const items = [item({ timestamp: "2026-08-15 09:00:00" })];
+    expect(computeCurrentStreak(items, new Date("2026-08-16T23:00:00Z"))).toBe(
+      1
+    );
   });
 
   test("stops counting at the first gap in days", () => {

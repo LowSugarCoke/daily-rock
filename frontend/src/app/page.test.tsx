@@ -9,6 +9,11 @@ const mockSong = {
   era: "1950s",
   genre_tags: ["Rock 'n' Roll"],
   youtube_id: "T38v3-SSGcM",
+  album: "Berry Is On Top",
+  year: 1958,
+  cover_url:
+    "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+  cover_color: "#eda273",
 };
 
 const mockNextSong = {
@@ -18,6 +23,11 @@ const mockNextSong = {
   era: "1960s",
   genre_tags: ["Hard Rock", "Classic Rock"],
   youtube_id: "HQmmM_vIi4I",
+  album: "Led Zeppelin II",
+  year: 1969,
+  cover_url:
+    "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/x/600x600bb.jpg",
+  cover_color: "#b28470",
 };
 
 describe("Home Component", () => {
@@ -63,6 +73,71 @@ describe("Home Component", () => {
     expect(screen.getByText("Chuck Berry")).toBeInTheDocument();
     expect(screen.getByText("1950s")).toBeInTheDocument();
     expect(screen.getByText("Rock 'n' Roll")).toBeInTheDocument();
+  });
+
+  test("shows the album credits and cover", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    expect(
+      await screen.findByText("Berry Is On Top, 1958")
+    ).toBeInTheDocument();
+    expect(screen.getByAltText("Berry Is On Top cover")).toBeInTheDocument();
+  });
+
+  test("stamps the date and which day of the journey this song is", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    expect(
+      await screen.findByText(/^[A-Z][a-z]{2} \d{1,2} · Day 1$/)
+    ).toBeInTheDocument();
+  });
+
+  test("tints the page with the cover colour", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    await screen.findByText("Johnny B. Goode");
+    expect(document.documentElement.style.getPropertyValue("--cover")).toBe(
+      "#eda273"
+    );
+    expect(document.documentElement.style.getPropertyValue("--accent")).toMatch(
+      /^#[0-9a-f]{6}$/
+    );
+  });
+
+  test("embeds a YouTube player for the current song", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSong,
+    } as Response);
+
+    render(<Home />);
+
+    const player = await screen.findByTitle("Johnny B. Goode - Chuck Berry");
+    expect(player.tagName).toBe("IFRAME");
+    expect(player).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/T38v3-SSGcM"
+    );
+    expect(player).toHaveAttribute("allowfullscreen");
   });
 
   test("renders empty/no-song state when backend returns 404", async () => {
@@ -130,7 +205,7 @@ describe("Home Component", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Submit Rating/i })
+      screen.getByRole("button", { name: /Save to diary/i })
     ).toBeInTheDocument();
 
     // Check for 5 star buttons
@@ -156,7 +231,7 @@ describe("Home Component", () => {
       ).not.toBeInTheDocument();
     });
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     expect(
@@ -196,7 +271,7 @@ describe("Home Component", () => {
     const star4 = screen.getByLabelText("Rate 4 stars");
     fireEvent.click(star4);
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     // Verify error is displayed on screen
@@ -242,12 +317,12 @@ describe("Home Component", () => {
     const star4 = screen.getByLabelText("Rate 4 stars");
     fireEvent.click(star4);
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     // Assert submitting state - elements should be disabled and button text should change
     expect(submitBtn).toBeDisabled();
-    expect(submitBtn).toHaveTextContent("Submitting...");
+    expect(submitBtn).toHaveTextContent("Saving...");
     expect(
       screen.getByPlaceholderText(
         "Add private notes about this song (optional)..."
@@ -270,9 +345,9 @@ describe("Home Component", () => {
     // Wait until it is no longer submitting
     await waitFor(() => {
       const submitBtnAfter = screen.getByRole("button", {
-        name: /Submit Rating/i,
+        name: /Save to diary/i,
       });
-      expect(submitBtnAfter).not.toHaveTextContent("Submitting...");
+      expect(submitBtnAfter).not.toHaveTextContent("Saving...");
     });
   });
 
@@ -326,7 +401,7 @@ describe("Home Component", () => {
     });
 
     // 4. Submit
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     // 5. Verification of success message and transition to next song
@@ -396,7 +471,7 @@ describe("Home Component", () => {
     const star5 = screen.getByLabelText("Rate 5 stars");
     fireEvent.click(star5);
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Rating/i });
+    const submitBtn = screen.getByRole("button", { name: /Save to diary/i });
     fireEvent.click(submitBtn);
 
     // 3. Verification of "no song" view after success

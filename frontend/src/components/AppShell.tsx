@@ -33,36 +33,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.shell}>
-      <nav className={styles.nav}>
-        <div className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true" />
-          <h1 className={styles.brandWord}>Daily Rock</h1>
-        </div>
-        <div className={styles.tabs}>
-          {TABS.map((tab) => {
+      <header className={styles.bar}>
+        <h1 className={styles.brandWord}>Daily Rock</h1>
+        <nav className={styles.tabs} aria-label="Main">
+          {TABS.map(({ href, label }) => {
             const isActive =
-              tab.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(tab.href);
+              href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
               <Link
-                key={tab.href}
-                href={tab.href}
+                key={href}
+                href={href}
                 aria-current={isActive ? "page" : undefined}
                 className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
               >
-                {tab.label}
+                {label}
               </Link>
             );
           })}
-        </div>
+        </nav>
         {streak !== null && streak > 0 && (
           <span className={styles.streak}>
-            🔥 <span className={styles.streakValue}>{streak}</span>&nbsp;day
-            streak
+            <span>{streak}</span> day streak
           </span>
         )}
-      </nav>
+      </header>
       <div className={styles.body}>{children}</div>
     </div>
   );

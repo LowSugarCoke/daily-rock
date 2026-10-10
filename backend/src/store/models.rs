@@ -8,6 +8,10 @@ pub struct Song {
     pub era: String,
     pub genre_tags: Vec<String>,
     pub youtube_id: String,
+    pub album: String,
+    pub year: u16,
+    pub cover_url: String,
+    pub cover_color: String,
 }
 
 // TODO: Define your `Rating` struct here.
@@ -38,6 +42,10 @@ pub struct HistoryItem {
     pub era: String,
     pub genre_tags: Vec<String>,
     pub youtube_id: String,
+    pub album: String,
+    pub year: u16,
+    pub cover_url: String,
+    pub cover_color: String,
     pub rating: u8,
     pub note: Option<String>,
     pub timestamp: String,

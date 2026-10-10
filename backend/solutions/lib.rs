@@ -1,12 +1,16 @@
 use axum::{
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
 };
 use std::sync::Arc;
 use tower_service::Service;
 use worker::*;
 
+pub mod access;
+pub mod errors;
+pub mod genres;
 pub mod handlers;
+pub mod progress;
 pub mod store;
 
 #[derive(Clone)]
@@ -27,6 +31,8 @@ pub fn app_with_store(store: Arc<dyn store::SongStore + Send + Sync>) -> Router 
         )
         .route("/api/ratings", post(handlers::submit_rating))
         .route("/api/history", get(handlers::get_listening_history))
+        .route("/api/progress", get(handlers::get_progress))
+        .route("/api/ratings/{id}", put(handlers::update_rating))
         .with_state(state)
 }
 
@@ -115,6 +121,10 @@ mod tests {
         assert_eq!(body.era, "1950s");
         assert_eq!(body.genre_tags, vec!["Rock 'n' Roll".to_string()]);
         assert_eq!(body.youtube_id, "T38v3-SSGcM");
+        assert_eq!(body.album, "Berry Is On Top");
+        assert_eq!(body.year, 1958);
+        assert!(body.cover_url.starts_with("https://"));
+        assert_eq!(body.cover_color, "#eda273");
     }
 
     #[tokio::test]
@@ -300,5 +310,162 @@ mod tests {
         let history_genre: Vec<store::HistoryItem> = response_genre.json();
         assert_eq!(history_genre.len(), 1);
         assert_eq!(history_genre[0].song_id, "2");
+    }
+
+    #[tokio::test]
+    async fn test_get_progress_counts_rated_songs() {
+        let server = TestServer::new(app());
+
+        let response = server.get("/api/progress").await;
+        response.assert_status_ok();
+        let body: Vec<progress::EraProgress> = response.json();
+        assert_eq!(body.len(), 3);
+        assert!(body.iter().all(|p| p.listened == 0 && p.total == 1));
+
+        server
+            .post("/api/ratings")
+            .json(&serde_json::json!({ "daily_selection_id": "3", "rating": 5 }))
+            .await
+            .assert_status(http::StatusCode::CREATED);
+
+        let body: Vec<progress::EraProgress> = server.get("/api/progress").await.json();
+        assert_eq!(body[2].era, "1970s");
+        assert_eq!(body[2].listened, 1);
+    }
+
+    /// Rates song 1 (5 stars, with a note) and returns the new rating's id from the history.
+    async fn rate_first_song(server: &TestServer) -> String {
+        server
+            .post("/api/ratings")
+            .json(&serde_json::json!({
+                "daily_selection_id": "1",
+                "rating": 5,
+                "note": "First listen"
+            }))
+            .await
+            .assert_status(http::StatusCode::CREATED);
+        let history: Vec<store::HistoryItem> = server.get("/api/history").await.json();
+        history[0].rating_id.clone()
+    }
+
+    #[tokio::test]
+    async fn test_update_rating_changes_score_and_note() {
+        let server = TestServer::new(app());
+        let rating_id = rate_first_song(&server).await;
+
+        server
+            .put(&format!("/api/ratings/{rating_id}"))
+            .json(&serde_json::json!({ "rating": 3, "note": "Better on the second listen" }))
+            .await
+            .assert_status_ok();
+
+        let history: Vec<store::HistoryItem> = server.get("/api/history").await.json();
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].rating_id, rating_id);
+        assert_eq!(history[0].rating, 3);
+        assert_eq!(
+            history[0].note.as_deref(),
+            Some("Better on the second listen")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_update_rating_keeps_fields_left_out() {
+        let server = TestServer::new(app());
+        let rating_id = rate_first_song(&server).await;
+        let url = format!("/api/ratings/{rating_id}");
+
+        server
+            .put(&url)
+            .json(&serde_json::json!({ "note": "Only the note changes" }))
+            .await
+            .assert_status_ok();
+        let history: Vec<store::HistoryItem> = server.get("/api/history").await.json();
+        assert_eq!(history[0].rating, 5);
+        assert_eq!(history[0].note.as_deref(), Some("Only the note changes"));
+
+        server
+            .put(&url)
+            .json(&serde_json::json!({ "rating": 2 }))
+            .await
+            .assert_status_ok();
+        let history: Vec<store::HistoryItem> = server.get("/api/history").await.json();
+        assert_eq!(history[0].rating, 2);
+        assert_eq!(history[0].note.as_deref(), Some("Only the note changes"));
+    }
+
+    #[tokio::test]
+    async fn test_update_rating_empty_note_removes_it() {
+        let server = TestServer::new(app());
+        let rating_id = rate_first_song(&server).await;
+
+        server
+            .put(&format!("/api/ratings/{rating_id}"))
+            .json(&serde_json::json!({ "note": "" }))
+            .await
+            .assert_status_ok();
+
+        let history: Vec<store::HistoryItem> = server.get("/api/history").await.json();
+        assert_eq!(history[0].rating, 5);
+        assert_eq!(history[0].note, None);
+    }
+
+    #[tokio::test]
+    async fn test_update_rating_unknown_id_is_not_found() {
+        let server = TestServer::new(app());
+        rate_first_song(&server).await;
+
+        server
+            .put("/api/ratings/r_does_not_exist")
+            .json(&serde_json::json!({ "rating": 3 }))
+            .await
+            .assert_status(http::StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn test_update_rating_rejects_invalid_input_without_saving() {
+        let server = TestServer::new(app());
+        let rating_id = rate_first_song(&server).await;
+        let url = format!("/api/ratings/{rating_id}");
+
+        let bad_bodies = [
+            serde_json::json!({}),
+            serde_json::json!({ "rating": 0 }),
+            serde_json::json!({ "rating": 6, "note": "Rating is out of range" }),
+            serde_json::json!({ "rating": 4, "note": "樂".repeat(1025) }),
+        ];
+        for body in &bad_bodies {
+            server
+                .put(&url)
+                .json(body)
+                .await
+                .assert_status(http::StatusCode::BAD_REQUEST);
+        }
+        server
+            .put(&format!("/api/ratings/{}", "a".repeat(65)))
+            .json(&serde_json::json!({ "rating": 3 }))
+            .await
+            .assert_status(http::StatusCode::BAD_REQUEST);
+
+        let history: Vec<store::HistoryItem> = server.get("/api/history").await.json();
+        assert_eq!(history[0].rating, 5);
+        assert_eq!(history[0].note.as_deref(), Some("First listen"));
+    }
+
+    #[tokio::test]
+    async fn test_update_rating_does_not_change_daily_selection() {
+        let server = TestServer::new(app());
+        let rating_id = rate_first_song(&server).await;
+
+        server
+            .put(&format!("/api/ratings/{rating_id}"))
+            .json(&serde_json::json!({ "rating": 1 }))
+            .await
+            .assert_status_ok();
+
+        let current: store::Song = server.get("/api/daily_selection").await.json();
+        assert_eq!(current.id, "2");
+        let history: Vec<store::HistoryItem> = server.get("/api/history").await.json();
+        assert_eq!(history.len(), 1);
     }
 }

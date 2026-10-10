@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Rock - 讓頁面不那麼工整</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cover: #b28470;
+    --accent: #8b6657;
+    --bg: color-mix(in oklab, var(--cover) 16%, #fbfaf8);
+    --surface: color-mix(in oklab, var(--bg) 55%, #ffffff);
+    --line: color-mix(in oklab, var(--cover) 22%, #d9d6d0);
+    --text: #141414;
+    --text-2: #4d4b47;
+    --text-3: #66635e;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --hand: "Caveat", "Segoe Print", cursive;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); color: var(--text); background: #efece6; line-height: 1.5; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* Review chrome (not part of the app) */
+  .doc-head h1 { font-size: 28px; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .doc-head p { color: var(--text-2); max-width: 760px; }
+  .current { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 24px; align-items: center; margin: 28px 0 40px; padding: 20px; background: #fff; border-radius: 12px; }
+  .current img { width: 100%; border-radius: 6px; border: 1px solid #ddd; display: block; }
+  .current h2 { font-size: 17px; margin-bottom: 6px; }
+  .current ul { padding-left: 18px; color: var(--text-2); font-size: 15px; }
+  .option { margin-bottom: 56px; }
+  .option-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .option-head .tag { font-weight: 700; font-size: 15px; background: #141414; color: #fff; border-radius: 6px; padding: 2px 10px; }
+  .option-head h2 { font-size: 22px; letter-spacing: -0.01em; }
+  .option-head .level { font-size: 14px; color: var(--text-2); }
+  .notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 14px; }
+  .notes div { background: #fff; border-radius: 10px; padding: 14px 16px; font-size: 14.5px; color: var(--text-2); }
+  .notes b { color: var(--text); display: block; margin-bottom: 4px; }
+  .notes ul { padding-left: 18px; }
+
+  /* Shared app mock */
+  .mock { background: var(--bg); border-radius: 14px; padding: 28px 36px 40px; overflow: hidden; border: 1px solid #ddd8cf; }
+  .bar { display: flex; gap: 28px; align-items: center; margin-bottom: 22px; font-size: 15px; }
+  .bar b { font-size: 17px; }
+  .bar span { color: var(--text-2); }
+  .bar .on { color: var(--text); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 52px; align-items: start; }
+  .cover { width: 100%; aspect-ratio: 1; display: block; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 12px 32px -8px color-mix(in oklab, var(--cover) 45%, rgba(0,0,0,.35)); }
+  .player { position: relative; margin-top: 20px; aspect-ratio: 16/9; border-radius: 4px; overflow: hidden; background: #000; }
+  .player img { width: 100%; height: 100%; object-fit: cover; opacity: .85; display: block; }
+  .player::after { content: ""; position: absolute; left: 50%; top: 50%; width: 60px; height: 42px; margin: -21px 0 0 -30px; border-radius: 10px; background: #f00 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 7l8 5-8 5z' fill='white'/%3E%3C/svg%3E") center/28px no-repeat; }
+  .title { font-size: 46px; font-weight: 700; line-height: 1.05; letter-spacing: -0.025em; margin-bottom: 8px; }
+  .artist { font-size: 21px; font-weight: 500; margin-bottom: 12px; }
+  .meta { font-size: 15px; color: var(--text-2); }
+  .meta2 { font-size: 15px; color: var(--text-3); }
+  .label { font-size: 15px; font-weight: 600; margin: 32px 0 10px; }
+  .seg { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; padding: 2px; border-radius: 10px; background: color-mix(in oklab, var(--cover) 14%, #e7e4de); }
+  .seg span { text-align: center; padding: 10px 0; border-radius: 8px; font-size: 15px; color: var(--text-2); }
+  .seg .on { background: var(--accent); color: #fff; font-weight: 600; }
+  .note { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 12px 14px; height: 110px; color: var(--text-3); }
+  .btn { margin-top: 18px; background: var(--accent); color: #fff; font-weight: 600; text-align: center; padding: 13px; border-radius: 10px; }
+
+  /* ---------- A: record slides out of the sleeve ---------- */
+  .a .sleeve { position: relative; }
+  .a .vinyl {
+    position: absolute; top: 4%; left: 4%; width: 92%; aspect-ratio: 1; border-radius: 50%;
+    background:
+      radial-gradient(circle, #fbfaf8 0 1.4%, var(--accent) 1.6% 17%, #111 17.4% 18%, transparent 18.2%),
+      repeating-radial-gradient(circle, #151515 0 2px, #202020 2px 3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    transform: translateX(30%);
+    animation: spin 5s linear infinite;
+  }
+  .a .cover { position: relative; transform: rotate(-2.2deg); }
+  @keyframes spin { to { transform: translateX(30%) rotate(360deg); } }
+  .a .grid { gap: 140px; }
+  .a .title { margin-left: -6px; }
+  .a .player { transform: rotate(0.6deg); margin-top: 28px; }
+
+  /* ---------- B: listening diary ---------- */
+  .b .grid { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 60px; }
+  .b .taped { position: relative; transform: rotate(-3deg); margin: 10px 0 0 8px; }
+  .b .taped .cover { border-radius: 1px; box-shadow: 0 2px 4px rgba(0,0,0,.18), 0 16px 28px -12px rgba(0,0,0,.35); }
+  .b .tape { position: absolute; width: 96px; height: 28px; background: rgba(250, 244, 222, .72); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .b .tape.t1 { top: -12px; left: 18px; transform: rotate(-8deg); }
+  .b .tape.t2 { bottom: -10px; right: 14px; transform: rotate(-4deg); }
+  .b .stamp {
+    display: inline-block; font-weight: 800; letter-spacing: .08em; font-size: 15px; color: var(--accent);
+    border: 2.5px solid var(--accent); border-radius: 5px; padding: 3px 10px; transform: rotate(-7deg);
+    opacity: .85; margin: 0 0 18px 4px;
+  }
+  .b .player { transform: rotate(1.2deg); margin: 28px 0 0 18px; width: 92%; box-shadow: 0 10px 22px -12px rgba(0,0,0,.5); }
+  .b .words { display: flex; gap: 22px; flex-wrap: wrap; font-size: 17px; color: var(--text-2); padding: 6px 2px; }
+  .b .words span { position: relative; }
+  .b .words .on { color: var(--text); font-weight: 600; }
+  .b .words .on svg { position: absolute; left: -16px; top: -12px; width: calc(100% + 32px); height: calc(100% + 24px); color: var(--accent); overflow: visible; }
+  .b .card {
+    background: #fffdf7; transform: rotate(1deg); padding: 10px 18px 12px; min-height: 130px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.1), 0 10px 20px -14px rgba(0,0,0,.4);
+    background-image: repeating-linear-gradient(to bottom, transparent 0 31px, #cfe0ea 31px 32px);
+    font-family: var(--hand); font-size: 26px; line-height: 32px; color: #2a3a6b;
+  }
+  .b .btn { display: inline-block; padding: 12px 28px; }
+
+  /* ---------- C: poster collage ---------- */
+  .c .stage { position: relative; min-height: 720px; }
+  .c .cover { position: absolute; left: 0; top: 0; width: 420px; }
+  .c .spine {
+    position: absolute; left: 432px; top: 0; writing-mode: vertical-rl; transform: rotate(180deg);
+    font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-2);
+  }
+  .c .title {
+    position: absolute; left: 300px; top: 300px; right: 0; font-size: 104px; line-height: .9; letter-spacing: -0.045em;
+    color: var(--text); mix-blend-mode: multiply;
+  }
+  .c .under { position: absolute; left: 470px; top: 36px; right: 0; }
+  .c .under .artist { font-size: 26px; }
+  .c .under .meta { font-size: 16px; }
+  .c .player { position: absolute; left: 0; top: 452px; width: 280px; margin: 0; transform: rotate(-1.5deg); }
+  .c .lower { position: absolute; left: 470px; right: 0; top: 520px; }
+  .c .scale { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: color-mix(in oklab, var(--text) 30%, transparent); }
+  .c .scale .on { color: var(--accent); text-decoration: underline; text-decoration-thickness: 4px; text-underline-offset: 6px; }
+  .c .line-note { border-bottom: 2px solid var(--text); padding: 8px 0; color: var(--text-3); margin-top: 16px; }
+
+  /* Decision form */
+  .decide { background: #fff; border-radius: 12px; padding: 22px 24px; }
+  .decide h2 { font-size: 20px; margin-bottom: 12px; }
+  .decide label { display: flex; gap: 10px; align-items: center; padding: 8px 0; font-size: 16px; min-height: 44px; cursor: pointer; }
+  .decide textarea { width: 100%; min-height: 80px; margin-top: 8px; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font: inherit; }
+  .decide button { margin-top: 12px; background: #141414; color: #fff; border: 0; border-radius: 8px; padding: 12px 22px; font: inherit; font-weight: 600; cursor: pointer; min-height: 44px; }
+
+  @media (prefers-reduced-motion: reduce) { .a .vinyl { animation: none; } }
+  @media (max-width: 900px) {
+    .current, .notes { grid-template-columns: minmax(0, 1fr); }
+    .grid, .b .grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    .a .vinyl { display: none; }
+    .c .stage { position: static; min-height: 0; }
+    .c .cover, .c .spine, .c .title, .c .under, .c .player, .c .lower { position: static; width: auto; transform: none; }
+    .c .spine { writing-mode: horizontal-tb; margin: 8px 0; }
+    .c .title { font-size: 56px; margin-top: -40px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="doc-head">
+    <h1>Today 頁：三個「不那麼工整」的方向</h1>
+    <p>三個方向都保留你喜歡的部分：專輯封面當主角、背景跟著封面變色、按鈕用封面的顏色。差別在打破整齊的程度，由輕到重。用 Led Zeppelin II 當範例。</p>
+  </header>
+
+  <section class="current">
+    <img src="current-today.png" alt="目前的 Today 頁截圖">
+    <div>
+      <h2>現在的版本為什麼看起來工整</h2>
+      <ul>
+        <li>每個元素都對齊同一條格線，左右兩欄完全對稱</li>
+        <li>所有東西都是直的、方的，沒有任何角度或重疊</li>
+        <li>間距全部一樣大，沒有哪裡特別擠或特別空</li>
+        <li>沒有「手」的痕跡：沒有手寫、沒有物件感</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- A -->
+  <section class="option" id="option-a">
+    <div class="option-head"><span class="tag">A</span><h2>唱片從封套滑出來</h2><span class="level">改動最少</span></div>
+    <div class="mock a">
+      <div class="bar"><b>Daily Rock</b><span class="on">Today</span><span>History</span></div>
+      <div class="grid">
+        <div>
+          <div class="sleeve">
+            <div class="vinyl" aria-hidden="true"></div>
+            <img class="cover" src="https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1a/3d/bb/1a3dbb86-c1f8-737e-571f-d6b647a230be/dj.rhubuvkd.jpg/600x600bb.jpg" alt="Led Zeppelin II cover">
+          </div>
+          <div class="player"><img src="https://i.ytimg.com/vi/HibBnC6SVk8/hqdefault.jpg" alt=""></div>
+        </div>
+        <div>
+          <div class="title">Whole Lotta Love</div>
+          <div class="artist">Led Zeppelin</div>
+          <div class="meta">Led Zeppelin II, 1969</div>
+          <div class="meta2">1960s · Hard Rock, Classic Rock</div>
+          <div class="label">Rate this Song</div>
+          <div class="seg"><span>Skip</span><span>Meh</span><span>Good</span><span class="on">Great</span><span>Classic</span></div>
+          <div class="label">Notes</div>
+          <div class="note">Add private notes about this song (optional)...</div>
+          <div class="btn">Submit Rating</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div><b>改了什麼</b><ul><li>封面稍微歪一點，後面露出一張黑膠</li><li>播放音樂時黑膠會轉（開啟「減少動態」時不轉）</li><li>唱片圓心是封面的顏色</li></ul></div>
+      <div><b>代價</b><ul><li>變化最小，可能還是覺得太乾淨</li><li>手機上黑膠會被藏起來（空間不夠）</li></ul></div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="option" id="option-b">
+    <div class="option-head"><span class="tag">B</span><h2>聽歌日記</h2><span class="level">中等：像你自己的手帳</span></div>
+    <div class="mock b">
+      <div class="bar"><b>Daily Rock</b><span class="on">Today</span><span>History</span></div>
+      <div class="grid">
+        <div>
+          <div class="taped">
+            <img class="cover" src="https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1a/3d/bb/1a3dbb86-c1f8-737e-571f-d6b647a230be/dj.rhubuvkd.jpg/600x600bb.jpg" alt="Led Zeppelin II cover">
+            <span class="tape t1"></span><span class="tape t2"></span>
+          </div>
+          <div class="player"><img src="https://i.ytimg.com/vi/HibBnC6SVk8/hqdefault.jpg" alt=""></div>
+        </div>
+        <div>
+          <span class="stamp">SEP 30 · DAY 2</span>
+          <div class="title">Whole Lotta Love</div>
+          <div class="artist">Led Zeppelin</div>
+          <div class="meta">Led Zeppelin II, 1969</div>
+          <div class="meta2">1960s · Hard Rock, Classic Rock</div>
+          <div class="label">Rate this Song</div>
+          <div class="words">
+            <span>Skip</span><span>Meh</span><span>Good</span>
+            <span class="on">Great<svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="M6 24 C 8 6, 90 2, 95 18 C 99 34, 22 40, 8 30 C 2 24, 18 10, 52 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+            <span>Classic</span>
+          </div>
+          <div class="label">Notes</div>
+          <div class="card">That riff never gets old</div>
+          <div class="btn">Submit Rating</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div><b>改了什麼</b><ul><li>封面用膠帶貼在頁面上，播放器也斜斜地放</li><li>日期像蓋章，「DAY 2」是你聽到第幾首</li><li>評分是用筆圈起來的字</li><li>筆記寫在有橫線的卡片上，用手寫字體</li></ul></div>
+      <div><b>代價</b><ul><li>多一個字體（手寫字，只用在筆記）</li><li>風格比較可愛，可能不夠「搖滾」</li><li>History 頁也要跟著改成日記感，工作量比 A 大</li></ul></div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="option" id="option-c">
+    <div class="option-head"><span class="tag">C</span><h2>海報拼貼</h2><span class="level">最大膽</span></div>
+    <div class="mock c">
+      <div class="bar"><b>Daily Rock</b><span class="on">Today</span><span>History</span></div>
+      <div class="stage">
+        <img class="cover" src="https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1a/3d/bb/1a3dbb86-c1f8-737e-571f-d6b647a230be/dj.rhubuvkd.jpg/600x600bb.jpg" alt="Led Zeppelin II cover">
+        <div class="spine">Side A · 1969 · Atlantic</div>
+        <div class="under">
+          <div class="artist">Led Zeppelin</div>
+          <div class="meta">Led Zeppelin II, 1969 · Hard Rock, Classic Rock</div>
+        </div>
+        <div class="title">Whole Lotta Love</div>
+        <div class="player"><img src="https://i.ytimg.com/vi/HibBnC6SVk8/hqdefault.jpg" alt=""></div>
+        <div class="lower">
+          <div class="scale">Skip Meh Good <span class="on">Great</span> Classic</div>
+          <div class="line-note">Add private notes about this song (optional)...</div>
+          <div class="btn">Submit Rating</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div><b>改了什麼</b><ul><li>歌名超大，直接壓在封面上</li><li>封面旁邊有直排的小字，像唱片側邊</li><li>播放器縮小、斜放在角落</li><li>評分是一整排大字，選中的那個變色加底線</li></ul></div>
+      <div><b>代價</b><ul><li>歌名很長時（例如 I Bet You Look Good on the Dancefloor）要另外處理</li><li>手機上很難保留這種重疊效果</li><li>播放器變小，看影片不方便</li></ul></div>
+    </div>
+  </section>
+
+  <form class="decide" data-lavish-question="direction" onsubmit="event.preventDefault(); const f = new FormData(event.currentTarget); const choice = f.get('direction'); const note = (f.get('note') || '').trim(); if (!choice) return; window.lavish && window.lavish.queuePrompt('Use direction ' + choice + ' for the Today page' + (note ? '. Notes: ' + note : ''), { tag: 'choice', text: 'Direction: ' + choice + (note ? ' (' + note + ')' : ''), element: event.currentTarget, data: { question: 'direction', answer: choice, note } });">
+    <h2>你選哪個？</h2>
+    <label><input type="radio" name="direction" value="A"> A 唱片從封套滑出來</label>
+    <label><input type="radio" name="direction" value="B"> B 聽歌日記</label>
+    <label><input type="radio" name="direction" value="C"> C 海報拼貼</label>
+    <label><input type="radio" name="direction" value="Mix"> 混合（寫在下面，例如「A 的黑膠 + B 的手寫筆記」）</label>
+    <textarea name="note" placeholder="想混合或調整的地方（選填）"></textarea>
+    <button type="submit">送出選擇</button>
+  </form>
+</div>
+</body>
+</html>

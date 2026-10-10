@@ -7,49 +7,13 @@ import {
 } from "@testing-library/react";
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import HistoryPage from "./page";
-import type { HistoryItem } from "@/lib/types";
-
-const mockHistory: HistoryItem[] = [
-  {
-    rating_id: "r3",
-    song_id: "3",
-    title: "Whole Lotta Love",
-    artist: "Led Zeppelin",
-    era: "1970s",
-    genre_tags: ["Hard Rock", "Classic Rock"],
-    youtube_id: "HQmmM_vIi4I",
-    rating: 5,
-    note: "That riff never gets old",
-    timestamp: "2026-08-15 09:00:00",
-  },
-  {
-    rating_id: "r2",
-    song_id: "2",
-    title: "Paranoid",
-    artist: "Black Sabbath",
-    era: "1970s",
-    genre_tags: ["Heavy Metal"],
-    youtube_id: "xyz",
-    rating: 4,
-    note: null,
-    timestamp: "2026-08-14 09:00:00",
-  },
-  {
-    rating_id: "r1",
-    song_id: "1",
-    title: "Johnny B. Goode",
-    artist: "Chuck Berry",
-    era: "1950s",
-    genre_tags: ["Rock 'n' Roll"],
-    youtube_id: "T38v3-SSGcM",
-    rating: 3,
-    note: null,
-    timestamp: "2026-08-13 09:00:00",
-  },
-];
+import { mockHistory } from "@/test/history-fixture";
 
 describe("HistoryPage", () => {
   beforeEach(() => {
+    // Fixture ratings end on Aug 15, so the streak is live on that day.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -61,6 +25,7 @@ describe("HistoryPage", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -74,21 +39,27 @@ describe("HistoryPage", () => {
     expect(screen.getByText("Johnny B. Goode")).toBeInTheDocument();
   });
 
-  test("renders computed stat tiles", async () => {
+  test("summarises the stats in one line", async () => {
     render(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText("Songs Logged")).toBeInTheDocument();
-    });
+    // (5 + 4 + 3) / 3 = 4, and the fixture has three days in a row.
+    expect(
+      await screen.findByText("3 songs · avg 4 / 5 · 3-day streak")
+    ).toBeInTheDocument();
+  });
 
-    const songsTile = screen.getByText("Songs Logged").parentElement!;
-    expect(within(songsTile).getByText("3")).toBeInTheDocument();
+  test("keeps era and genre behind the Filter toggle", async () => {
+    render(<HistoryPage />);
 
-    const avgTile = screen.getByText("Average Rating").parentElement!;
-    expect(within(avgTile).getByText("4")).toBeInTheDocument(); // (5+4+3)/3 = 4
+    const toggle = await screen.findByRole("button", { name: /filter/i });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("button", { name: "1950s" })
+    ).not.toBeInTheDocument();
 
-    const streakTile = screen.getByText("Current Streak").parentElement!;
-    expect(within(streakTile).getByText("3")).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "1950s" })).toBeInTheDocument();
   });
 
   test("filters the list by search text", async () => {
@@ -98,7 +69,7 @@ describe("HistoryPage", () => {
       expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText(/search title or artist/i), {
+    fireEvent.change(screen.getByRole("searchbox"), {
       target: { value: "paranoid" },
     });
 
@@ -114,13 +85,55 @@ describe("HistoryPage", () => {
       expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText(/era/i), {
-      target: { value: "1950s" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: /filter/i }));
+    const eraButton = screen.getByRole("button", { name: "1950s" });
+    fireEvent.click(eraButton);
 
+    expect(eraButton).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("Johnny B. Goode")).toBeInTheDocument();
     expect(screen.queryByText("Whole Lotta Love")).not.toBeInTheDocument();
     expect(screen.queryByText("Paranoid")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "All eras" }));
+    expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
+  });
+
+  test("filters the list by genre, and a second tap clears it", async () => {
+    render(<HistoryPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /filter/i }));
+    const genre = screen.getByRole("button", { name: "Heavy Metal" });
+    fireEvent.click(genre);
+
+    expect(screen.getByText("Paranoid")).toBeInTheDocument();
+    expect(screen.queryByText("Whole Lotta Love")).not.toBeInTheDocument();
+
+    fireEvent.click(genre);
+    expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
+  });
+
+  test("search also matches album and genre", async () => {
+    render(<HistoryPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "led zeppelin ii" },
+    });
+    expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
+    expect(screen.queryByText("Paranoid")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "rock 'n' roll" },
+    });
+    expect(screen.getByText("Johnny B. Goode")).toBeInTheDocument();
+    expect(screen.queryByText("Whole Lotta Love")).not.toBeInTheDocument();
   });
 
   test("shows an empty state when filters match nothing", async () => {
@@ -130,10 +143,32 @@ describe("HistoryPage", () => {
       expect(screen.getByText("Whole Lotta Love")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText(/search title or artist/i), {
+    fireEvent.change(screen.getByRole("searchbox"), {
       target: { value: "no such song" },
     });
 
     expect(screen.getByText(/no results/i)).toBeInTheDocument();
+  });
+  test("shows each row's album, year, cover and rating in words", async () => {
+    render(<HistoryPage />);
+
+    const row = (await screen.findByText("Whole Lotta Love")).closest("li")!;
+    expect(within(row).getByText("Led Zeppelin II, 1969")).toBeInTheDocument();
+    expect(
+      within(row).getByAltText("Led Zeppelin II cover")
+    ).toBeInTheDocument();
+    expect(within(row).getByText("Classic")).toBeInTheDocument();
+    expect(
+      within(row).getByText("Hard Rock, Classic Rock")
+    ).toBeInTheDocument();
+  });
+  test("links each entry to its own page", async () => {
+    render(<HistoryPage />);
+
+    const row = (await screen.findByText("Whole Lotta Love")).closest("li")!;
+    expect(within(row).getByRole("link")).toHaveAttribute(
+      "href",
+      "/history/r3"
+    );
   });
 });

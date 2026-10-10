@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import styles from "./page.module.css";
 import {
   computeAverageRating,
@@ -8,11 +10,29 @@ import {
   formatDayMonth,
 } from "@/lib/history-stats";
 import type { HistoryItem } from "@/lib/types";
+import { ratingWord } from "@/lib/rating";
+import { PenCircle } from "@/components/Diary";
 
 const ALL = "";
 
-function distinctSorted(values: string[]): string[] {
-  return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
+// Genres ordered by how often you've heard them, so the ones you know best
+// come first; ties sort by name.
+function genresByCount(
+  items: HistoryItem[]
+): { name: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const tag of items.flatMap((i) => i.genre_tags)) {
+    counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+  return Array.from(counts, ([name, count]) => ({ name, count })).sort(
+    (a, b) => b.count - a.count || a.name.localeCompare(b.name)
+  );
+}
+
+function matchesSearch(item: HistoryItem, query: string): boolean {
+  return [item.title, item.artist, item.album, ...item.genre_tags].some(
+    (field) => field.toLowerCase().includes(query)
+  );
 }
 
 export default function HistoryPage() {
@@ -23,7 +43,7 @@ export default function HistoryPage() {
   const [search, setSearch] = useState<string>("");
   const [era, setEra] = useState<string>(ALL);
   const [genre, setGenre] = useState<string>(ALL);
-  const [artist, setArtist] = useState<string>(ALL);
+  const [filtersOpen, setFiltersOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetch("/api/history")
@@ -44,54 +64,72 @@ export default function HistoryPage() {
   }, []);
 
   const eraOptions = useMemo(
-    () => distinctSorted(items.map((i) => i.era)),
+    () => Array.from(new Set(items.map((i) => i.era))).sort(),
     [items]
   );
-  const genreOptions = useMemo(
-    () => distinctSorted(items.flatMap((i) => i.genre_tags)),
-    [items]
-  );
-  const artistOptions = useMemo(
-    () => distinctSorted(items.map((i) => i.artist)),
-    [items]
-  );
+  const genreOptions = useMemo(() => genresByCount(items), [items]);
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return items.filter((item) => {
-      if (era && item.era !== era) return false;
-      if (artist && item.artist !== artist) return false;
-      if (genre && !item.genre_tags.includes(genre)) return false;
-      if (
-        query &&
-        !item.title.toLowerCase().includes(query) &&
-        !item.artist.toLowerCase().includes(query)
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [items, search, era, artist, genre]);
+    return items.filter(
+      (item) =>
+        (!era || item.era === era) &&
+        (!genre || item.genre_tags.includes(genre)) &&
+        (!query || matchesSearch(item, query))
+    );
+  }, [items, search, era, genre]);
 
   const songsLogged = items.length;
   const averageRating = computeAverageRating(items);
   const currentStreak = computeCurrentStreak(items);
 
-  const hasActiveFilters = Boolean(search || era || genre || artist);
+  const hasActiveFilters = Boolean(search || era || genre);
+
+  const summary = `${songsLogged} ${songsLogged === 1 ? "song" : "songs"} · avg ${averageRating} / 5 · ${currentStreak}-day streak`;
+  const activeFilterCount = (era ? 1 : 0) + (genre ? 1 : 0);
 
   return (
     <div className={styles.page}>
       <main className={styles.main}>
         <div className={styles.head}>
           <h2 className={styles.heading}>Listening History</h2>
-          <p className={styles.subheading}>
-            Every song you&apos;ve rated, filterable by era, artist, and genre.
-          </p>
+          {!loading && !error && <p className={styles.summary}>{summary}</p>}
+          {!loading && !error && (
+            <div className={styles.tools}>
+              <label className={styles.search}>
+                <span className={styles.visuallyHidden}>Search</span>
+                <input
+                  type="search"
+                  className={styles.searchInput}
+                  placeholder="Search title, artist, genre"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className={`${styles.filterToggle} ${filtersOpen ? styles.filterToggleOpen : ""}`}
+                aria-expanded={filtersOpen}
+                aria-controls="history-filters"
+                onClick={() => setFiltersOpen((open) => !open)}
+              >
+                <span className={styles.filterLabel}>Filter</span>
+                {activeFilterCount > 0 && (
+                  <span className={styles.filterCount}>
+                    {activeFilterCount}
+                  </span>
+                )}
+                <span className={styles.chevron} aria-hidden="true">
+                  {filtersOpen ? "▴" : "▾"}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
         {loading && (
           <div className={styles.statusBox}>
-            <span className={styles.spinner}></span>
+            <span className={styles.spinner} aria-hidden="true"></span>
             Loading your history...
           </div>
         )}
@@ -104,83 +142,66 @@ export default function HistoryPage() {
 
         {!loading && !error && (
           <>
-            <div className={styles.statRow}>
-              <div className={styles.statTile}>
-                <div className={styles.statLabel}>Songs Logged</div>
-                <div className={styles.statValue}>{songsLogged}</div>
-              </div>
-              <div className={styles.statTile}>
-                <div className={styles.statLabel}>Average Rating</div>
-                <div className={styles.statValue}>
-                  {averageRating} <small>★</small>
+            {filtersOpen && (
+              <div className={styles.filters} id="history-filters">
+                <div className={styles.filterRow} role="group" aria-label="Era">
+                  <span className={styles.filterName}>Era</span>
+                  <div className={styles.eras}>
+                    {[ALL, ...eraOptions].map((option) => {
+                      const isOn = era === option;
+                      return (
+                        <button
+                          key={option || "all"}
+                          type="button"
+                          className={`${styles.era} ${isOn ? styles.eraOn : ""}`}
+                          aria-pressed={isOn}
+                          aria-label={option || "All eras"}
+                          onClick={() => setEra(option)}
+                        >
+                          {option || "All"}
+                          {isOn && <PenCircle />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div
+                  className={styles.filterRow}
+                  role="group"
+                  aria-label="Genre"
+                >
+                  <span className={styles.filterName}>Genre</span>
+                  <div className={styles.genres}>
+                    {genreOptions.map(({ name, count }) => {
+                      const isOn = genre === name;
+                      return (
+                        <button
+                          key={name}
+                          type="button"
+                          className={`${styles.genre} ${isOn ? styles.genreOn : ""}`}
+                          aria-pressed={isOn}
+                          aria-label={name}
+                          onClick={() => setGenre(isOn ? ALL : name)}
+                        >
+                          {name}
+                          <span
+                            className={styles.genreCount}
+                            aria-hidden="true"
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-              <div className={styles.statTile}>
-                <div className={styles.statLabel}>Current Streak</div>
-                <div className={styles.statValue}>
-                  {currentStreak} <small>days</small>
-                </div>
-              </div>
-            </div>
+            )}
 
-            <div className={styles.filterBar}>
-              <input
-                type="search"
-                className={styles.filterSearch}
-                placeholder="Search title or artist…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-
-              <label className={styles.filterField}>
-                <span className={styles.filterFieldLabel}>Era</span>
-                <select
-                  className={styles.filterSelect}
-                  value={era}
-                  onChange={(e) => setEra(e.target.value)}
-                >
-                  <option value={ALL}>All eras</option>
-                  {eraOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className={styles.filterField}>
-                <span className={styles.filterFieldLabel}>Genre</span>
-                <select
-                  className={styles.filterSelect}
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                >
-                  <option value={ALL}>All genres</option>
-                  {genreOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className={styles.filterField}>
-                <span className={styles.filterFieldLabel}>Artist</span>
-                <select
-                  className={styles.filterSelect}
-                  value={artist}
-                  onChange={(e) => setArtist(e.target.value)}
-                >
-                  <option value={ALL}>All artists</option>
-                  {artistOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {hasActiveFilters && (
+            {hasActiveFilters && (
+              <p className={styles.resultLine}>
+                {`${filteredItems.length} of ${items.length} songs`}
                 <button
                   type="button"
                   className={styles.clearFilters}
@@ -188,65 +209,62 @@ export default function HistoryPage() {
                     setSearch("");
                     setEra(ALL);
                     setGenre(ALL);
-                    setArtist(ALL);
                   }}
                 >
-                  Clear filters ×
+                  Clear filters
                 </button>
-              )}
-            </div>
+              </p>
+            )}
 
             {filteredItems.length === 0 ? (
               <div className={styles.emptyState}>
-                No results for the current filters — clear a filter to see more.
+                No results. Try another genre, or clear the filters.
               </div>
             ) : (
-              <ul className={styles.list}>
+              <ol className={styles.list}>
                 {filteredItems.map((item) => {
                   const { day, month } = formatDayMonth(item.timestamp);
                   return (
-                    <li key={item.rating_id} className={styles.row}>
-                      <div className={styles.rowDate}>
-                        <span className={styles.rowDateDay}>{day}</span>
-                        <span className={styles.rowDateMonth}>{month}</span>
-                      </div>
-                      <div className={styles.rowMain}>
-                        <div className={styles.rowTitleLine}>
-                          <span className={styles.rowTitle}>{item.title}</span>
-                          <span className={styles.rowArtist}>
-                            {item.artist}
-                          </span>
-                        </div>
-                        <div className={styles.rowTags}>
-                          <span className={styles.rowEra}>{item.era}</span>
-                          {item.genre_tags.map((tag) => (
-                            <span key={tag} className={styles.rowGenre}>
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                    <li key={item.rating_id} className={styles.entry}>
+                      <Link
+                        href={`/history/${item.rating_id}`}
+                        className={styles.entryLink}
+                      >
+                        <span className={styles.taped}>
+                          <Image
+                            className={styles.cover}
+                            src={item.cover_url}
+                            alt={`${item.album} cover`}
+                            width={300}
+                            height={300}
+                          />
+                        </span>
+                        <span className={styles.stamp}>
+                          {month} {Number(day)}
+                        </span>
+                        <span className={styles.title}>{item.title}</span>
+                        <span className={styles.artist}>{item.artist}</span>
+                        <span className={styles.album}>
+                          {`${item.album}, ${item.year}`}
+                        </span>
+                        <span className={styles.cardGenres}>
+                          {item.genre_tags.join(", ")}
+                        </span>
+                        <span
+                          className={styles.rating}
+                          data-rating={item.rating}
+                        >
+                          {ratingWord(item.rating)}
+                          <PenCircle />
+                        </span>
                         {item.note && (
-                          <div className={styles.rowNote}>
-                            &ldquo;{item.note}&rdquo;
-                          </div>
+                          <span className={styles.note}>{item.note}</span>
                         )}
-                      </div>
-                      <div className={styles.rowRating}>
-                        {[1, 2, 3, 4, 5].map((starValue) => (
-                          <span
-                            key={starValue}
-                            className={`${styles.rowStar} ${
-                              starValue <= item.rating ? styles.rowStarOn : ""
-                            }`}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
+                      </Link>
                     </li>
                   );
                 })}
-              </ul>
+              </ol>
             )}
           </>
         )}

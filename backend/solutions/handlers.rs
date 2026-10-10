@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::IntoResponse,
     Json,
@@ -117,6 +117,68 @@ pub async fn get_listening_history(
 ) -> impl IntoResponse {
     match state.song_store.get_history(query).await {
         Ok(history) => Json(history).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
+    }
+}
+
+pub async fn get_progress(State(state): State<crate::AppState>) -> impl IntoResponse {
+    match crate::progress::load_progress(state.song_store.as_ref()).await {
+        Ok(progress) => Json(progress).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
+    }
+}
+
+/// Body of `PUT /api/ratings/{id}`. A field left out keeps its current value.
+#[derive(Deserialize, Serialize, Default)]
+pub struct UpdateRatingRequest {
+    pub rating: Option<u8>,
+    pub note: Option<String>,
+}
+
+/// `PUT /api/ratings/{id}`: edits the score and/or note of a past rating.
+///
+/// An empty note removes the note. Responds 400 for invalid input (nothing is saved),
+/// 404 when no rating has this id, and 200 with the updated rating otherwise.
+pub async fn update_rating(
+    State(state): State<crate::AppState>,
+    Path(id): Path<String>,
+    Json(payload): Json<UpdateRatingRequest>,
+) -> impl IntoResponse {
+    if id.len() > 64 {
+        return (StatusCode::BAD_REQUEST, Json("Rating ID is too long")).into_response();
+    }
+
+    if payload.rating.is_none() && payload.note.is_none() {
+        return (StatusCode::BAD_REQUEST, Json("Nothing to update")).into_response();
+    }
+
+    if let Some(rating) = payload.rating {
+        if !(1..=5).contains(&rating) {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json("Rating must be between 1 and 5"),
+            )
+                .into_response();
+        }
+    }
+
+    if let Some(ref note) = payload.note {
+        if note.chars().count() > 1024 {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json("Note must be 1024 characters or less"),
+            )
+                .into_response();
+        }
+    }
+
+    match state
+        .song_store
+        .update_rating(id, payload.rating, payload.note)
+        .await
+    {
+        Ok(Some(rating)) => Json(rating).into_response(),
+        Ok(None) => (StatusCode::NOT_FOUND, Json("Rating not found")).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
     }
 }

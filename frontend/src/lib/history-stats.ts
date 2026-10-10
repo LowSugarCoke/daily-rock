@@ -38,12 +38,23 @@ export function computeAverageRating(items: HistoryItem[]): number {
   return Math.round((sum / items.length) * 10) / 10;
 }
 
-export function computeCurrentStreak(items: HistoryItem[]): number {
+// Timestamps come from D1's CURRENT_TIMESTAMP, which is UTC, so "today" is
+// taken in UTC as well.
+export function computeCurrentStreak(
+  items: HistoryItem[],
+  now: Date = new Date()
+): number {
   if (items.length === 0) return 0;
 
   const uniqueDays = Array.from(
     new Set(items.map((item) => dateKey(item.timestamp)))
   ).sort((a, b) => (a < b ? 1 : -1));
+
+  const today = new Date(`${now.toISOString().slice(0, 10)}T00:00:00Z`);
+  const latest = new Date(`${uniqueDays[0]}T00:00:00Z`);
+  if (Math.round((today.getTime() - latest.getTime()) / MS_PER_DAY) > 1) {
+    return 0;
+  }
 
   let streak = 1;
   for (let i = 1; i < uniqueDays.length; i++) {

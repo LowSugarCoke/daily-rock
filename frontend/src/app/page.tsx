@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import type { Song } from "@/lib/types";
-
-const STAR_CAPTIONS = ["Skip", "Meh", "Good", "Great", "Classic"];
+import { useCoverTheme } from "@/lib/use-cover-theme";
+import SongSpread from "@/components/SongSpread";
+import { NoteCard, RatingScale, diaryStyles } from "@/components/Diary";
 
 export default function Home() {
   const [song, setSong] = useState<Song | null>(null);
@@ -14,7 +15,6 @@ export default function Home() {
 
   // Rating and progression states
   const [rating, setRating] = useState<number | null>(null);
-  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [note, setNote] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
@@ -48,6 +48,8 @@ export default function Home() {
         setSubmitSuccess(false); // Reset success state on error
       });
   }, [fetchTrigger]);
+
+  useCoverTheme(song?.cover_color);
 
   const handleSubmitRating = async () => {
     if (!song) return;
@@ -93,7 +95,6 @@ export default function Home() {
       setSong(null); // Clear the rated song state immediately to prevent regression/residual UI
       setRating(null);
       setNote("");
-      setHoverRating(null);
       setLoading(true);
       setError(null);
       setNoSong(false);
@@ -105,151 +106,105 @@ export default function Home() {
     }
   };
 
-  const displayRating = hoverRating ?? rating ?? 0;
-  const todayLabel = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
+  const stampDate = new Date().toLocaleDateString("en-US", {
+    month: "short",
     day: "numeric",
   });
 
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <div className={styles.heroRow}>
+        <p className={styles.heroRow}>
           <span className={styles.eyebrow}>Today&apos;s Selection</span>
-          <span className={styles.dayLabel}>{todayLabel}</span>
-        </div>
+        </p>
 
-        <div className={styles.selectionSection}>
-          {loading && !submitSuccess && (
-            <div className={styles.statusBox}>
-              <span className={styles.spinner}></span>
-              {"Loading today's selection..."}
+        {loading && !submitSuccess && (
+          <div className={styles.statusBox}>
+            <span className={styles.spinner} aria-hidden="true"></span>
+            {"Loading today's selection..."}
+          </div>
+        )}
+
+        {submitSuccess && (
+          <div className={`${styles.statusBox} ${styles.success}`}>
+            <span>Success! Loading next selection...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className={`${styles.statusBox} ${styles.error}`}>
+            <div className={styles.errorContent}>
+              <h3 className={styles.errorTitle}>
+                {"Failed to load today's selection"}
+              </h3>
+              <p className={styles.errorMessage}>{error}</p>
             </div>
-          )}
+          </div>
+        )}
 
-          {submitSuccess && (
-            <div className={`${styles.statusBox} ${styles.success}`}>
-              <span className={styles.spinner}></span>
-              <span>Success! Loading next selection...</span>
+        {noSong && (
+          <div className={`${styles.statusBox} ${styles.warning}`}>
+            <div className={styles.warningContent}>
+              <h3 className={styles.warningTitle}>
+                No daily selection available
+              </h3>
+              <p className={styles.warningMessage}>
+                There are no songs loaded in the database yet.
+              </p>
             </div>
-          )}
+          </div>
+        )}
 
-          {error && (
-            <div className={`${styles.statusBox} ${styles.error}`}>
-              <span
-                className={styles.statusDot}
-                style={{ backgroundColor: "#ff4d4f" }}
-              ></span>
-              <div className={styles.errorContent}>
-                <h3 className={styles.errorTitle}>
-                  {"Failed to load today's selection"}
-                </h3>
-                <p className={styles.errorMessage}>{error}</p>
-              </div>
-            </div>
-          )}
+        {song && !loading && (
+          <SongSpread
+            song={song}
+            stamp={`${stampDate} · Day ${Number(song.id)}`}
+          >
+            <section className={styles.ratingSection}>
+              <h3 className={styles.ratingTitle}>Rate this Song</h3>
+              <RatingScale
+                value={rating}
+                onChange={(value) => {
+                  setRating(value);
+                  setValidationError(null);
+                }}
+                disabled={submitting}
+              />
 
-          {noSong && (
-            <div className={`${styles.statusBox} ${styles.warning}`}>
-              <span
-                className={styles.statusDot}
-                style={{ backgroundColor: "#faad14" }}
-              ></span>
-              <div className={styles.warningContent}>
-                <h3 className={styles.warningTitle}>
-                  No daily selection available
-                </h3>
-                <p className={styles.warningMessage}>
-                  There are no songs loaded in the database yet.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {song && !loading && (
-            <div className={styles.songCard}>
-              <div className={styles.tagsRow}>
-                <span className={styles.eraTag}>{song.era}</span>
-                {song.genre_tags.map((tag) => (
-                  <span key={tag} className={styles.genreTag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <h2 className={styles.songTitle}>{song.title}</h2>
-              <p className={styles.songArtist}>{song.artist}</p>
-
-              <div className={styles.mediaPlaceholder}>
-                <span className={styles.playIcon}>▶</span>
-              </div>
-
-              <div className={styles.ratingSection}>
-                <div className={styles.ratingHead}>
-                  <h3 className={styles.ratingTitle}>Rate this Song</h3>
-                  <span className={styles.ratingHint}>
-                    {rating ? `${rating} / 5 selected` : "Select a rating"}
-                  </span>
-                </div>
-
-                <div className={styles.starContainer}>
-                  {[1, 2, 3, 4, 5].map((starValue) => {
-                    const isFilled = starValue <= displayRating;
-                    return (
-                      <div key={starValue} className={styles.starWrap}>
-                        <button
-                          type="button"
-                          className={`${styles.starButton} ${isFilled ? styles.filled : ""}`}
-                          onClick={() => {
-                            setRating(starValue);
-                            setValidationError(null);
-                          }}
-                          onMouseEnter={() => setHoverRating(starValue)}
-                          onMouseLeave={() => setHoverRating(null)}
-                          aria-label={`Rate ${starValue} star${starValue > 1 ? "s" : ""}`}
-                          disabled={submitting}
-                        >
-                          ★
-                        </button>
-                        <span
-                          className={`${styles.starCaption} ${isFilled ? styles.starCaptionOn : ""}`}
-                        >
-                          {STAR_CAPTIONS[starValue - 1]}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className={styles.noteWrap}>
-                  <textarea
-                    className={styles.noteInput}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Add private notes about this song (optional)..."
-                    rows={3}
-                    disabled={submitting}
-                    maxLength={1024}
-                  />
-                  <span className={styles.noteCount}>{note.length} / 1024</span>
-                </div>
-
-                {validationError && (
-                  <p className={styles.validationError}>{validationError}</p>
-                )}
-
-                <button
-                  type="button"
-                  className={styles.submitButton}
-                  onClick={handleSubmitRating}
+              <label className={styles.noteLabel} htmlFor="song-note">
+                Notes
+              </label>
+              <NoteCard>
+                <textarea
+                  id="song-note"
+                  className={diaryStyles.noteInput}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Add private notes about this song (optional)..."
+                  rows={4}
                   disabled={submitting}
-                >
-                  {submitting ? "Submitting..." : "Submit Rating →"}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+                  maxLength={1024}
+                />
+                <span className={styles.noteCount}>{note.length} / 1024</span>
+              </NoteCard>
+
+              {validationError && (
+                <p className={styles.validationError} role="alert">
+                  {validationError}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className={styles.submitButton}
+                onClick={handleSubmitRating}
+                disabled={submitting}
+              >
+                {submitting ? "Saving..." : "Save to diary →"}
+              </button>
+            </section>
+          </SongSpread>
+        )}
       </main>
     </div>
   );
